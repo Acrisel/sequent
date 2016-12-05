@@ -24,11 +24,17 @@ import os
 from acris import MergedChainedDict
 import eventor
 import inspect
+import logging 
 
 from .sequent_types import SequentError, StepStatus
 from .step import Step
 from .event import Event
 
+module_logger=logging.getLogger(__name__)
+
+module_logger.setLevel(logging.DEBUG)
+
+#class Sequent(Step):
 class Sequent(Step):
     
     def __init__(self, name='', store='', *args, **kwargs):
@@ -37,9 +43,11 @@ class Sequent(Step):
         
         self.args=args
         self.kwargs=kwargs
-        Step.__init__(self, name=name, args=args, kwargs=kwargs)
+        #Step.__init__(self, name=name, args=args, kwargs=kwargs)
+        super().__init__(name=name, args=args, kwargs=kwargs)
         calling_module=eventor.calling_module()
         self.store=store if store else eventor.store_from_module(calling_module)
+        self.__steps=self.steps
                 
     def __repr__(self):
         return Step.__repr__(self)
@@ -81,6 +89,8 @@ class Sequent(Step):
     
     def __call__(self):
         evr=eventor.Eventor(*self.args, name=self.path, store=self.store, **self.kwargs)
+        #for step in self.__steps.values():
+        #    step.create_flow(evr)
         self.create_flow(evr)
         result=evr()
         return result

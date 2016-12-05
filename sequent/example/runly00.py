@@ -32,10 +32,10 @@ def prog(progname, success=True):
         raise Exception("%s failed" % progname)
     return progname
 
-myflow=seq.Sequent(logging_level=logging.DEBUG)
+myflow=seq.Sequent(logging_level=logging.INFO)
 
 s0=myflow.add_step('s0', loop=[1,])
-s00=s0.add_step('s00', loop=[1,])
+s00=s0.add_step('s00', loop=[1,2,])
 
 s1=s00.add_step('s1', func=prog, kwargs={'progname': 'prog1'}) 
 s2=s00.add_step('s2', func=prog, kwargs={'progname': 'prog2'}, require=( (s1, seq.StepStatus.success), )) 
