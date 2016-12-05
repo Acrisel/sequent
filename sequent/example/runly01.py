@@ -26,19 +26,17 @@ import logging
 
 logger=logging.getLogger(__name__)
 
-logger.setLevel(logging.DEBUG)
-
 def prog(progname, success=True):
     logger.info("doing what %s is doing" % progname)
     if not success:
         raise Exception("%s failed" % progname)
     return progname
 
-myflow=seq.Sequent(logging_level=logging.DEBUG)
+myflow=seq.Sequent(logging_level=logging.INFO)
 
-s=myflow.add_step('runly', loop=[1,2,])
+s=myflow.add_step('s0', repeat=[1,2,])
 
-s1=s.add_step('s1', loop=[1,2,])
+s1=s.add_step('s1', repeat=[1,2,])
 s11=s1.add_step('s11', func=prog, kwargs={'progname': 'prog11'}) 
 s12=s1.add_step('s12', func=prog, kwargs={'progname': 'prog12'}, require=( ( s11, seq.StepStatus.complete ), ))
 

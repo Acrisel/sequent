@@ -6,64 +6,100 @@ Sequent
 Overview
 --------
 
-    *Sequent* provides programmer with interface to create an execution flow of callables
+    *Sequent* provides programmer with interface to create flow.  *Sequent* is useful when there are multiple batch processes that should link together in processing flow.
     
-    It would be easier to show an example. 
+    For example, programs A1, A2 extract data from database, program B process the extracted files, and programs C1 and C2 transmit process information to remote client.
+    
+    *Sequent* can be used to create the flow where A1, A2 would run concurrently, then program B would run.  When B is successful, programs C1 and C2 would run.
+    
+    *Sequent* uses *Eventor* as its underline infrastructure.  With that, it gains *Eventor*'s recovery capabilities.  When running in recovery, successful steps can be skipped.
+    
+    Considering the above example, this can be useful when C2 transmission program fails.  Recovery run would only execute it with out redoing potentially expensive work that was already completed (A1, A2, B, and C1)
+    
+    It would be easier to show an example. In this example, *Step s2* would run after *Step s1* would loop twice. When they are done, *Step s3* will run.  This flow would be repeat twice.
 
 Simple Example
 ==============
     
-    .. code::
+    .. code-block:: python
         :number-lines:
         
-        import eventor as evr
+        import sequent as seq
         import logging
+        import time
         
         logger=logging.getLogger(__name__)
         
-        def prog(progname):
+        def prog(progname, success=True):
             logger.info("doing what %s is doing" % progname)
+            time.sleep(2) # mimic activity
+            if not success:
+                raise Exception("%s failed" % progname)
             return progname
+
+        myflow=seq.Sequent(logging_level=logging.INFO)
+
+        s0=myflow.add_step('s0', loop=[1,2])
+        s00=s0.add_step('s00', loop=[1,2,])
         
-        ev=evr.Eventor(store=':memory:')
+        s1=s00.add_step('s1', func=prog, kwargs={'progname': 'prog1'}) 
+        s2=s00.add_step('s2', func=prog, kwargs={'progname': 'prog2'}, require=( (s1, seq.StepStatus.success), )) 
         
-        ev1s=ev.add_event('run_step1')
-        ev2s=ev.add_event('run_step2')
-        ev3s=ev.add_event('run_step3')
-        
-        s1=ev.add_step('s1', func=prog, kwargs={'progname': 'prog1'}, 
-                       triggers={evr.StepTriggers.at_success: (ev2s,),}) 
-        s2=ev.add_step('s2', func=prog, kwargs={'progname': 'prog2'}, 
-                       triggers={evr.StepTriggers.at_success: (ev3s,), })
-        s3=ev.add_step('s3', func=prog, kwargs={'progname': 'prog3'},)
-        
-        ev.add_assoc(ev1s, s1)
-        ev.add_assoc(ev2s, s2)
-        ev.add_assoc(ev3s, s3)
-        
-        ev.trigger_event(ev1s, 1)
-        ev()
-        
+        s3=s0.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, require=( (s00, seq.StepStatus.success), )) 
+
+        myflow()   
+     
 Example Output
 ==============
 
-    The above example with provide the following log output.
-              
-    .. code::
+    The above example with provide the following log output.  Note more detailed logging activities was stripped off.  Only actual shows actual program activity is shown.
     
-        [ 2016-11-30 10:07:48,572 ][ INFO ][ Eventor store file: :memory: ][ main.__init__ ]
-        [ 2016-11-30 10:07:48,612 ][ INFO ][ Running step s1[1] ][ main.task_wrapper ]
-        [ 2016-11-30 10:07:48,612 ][ INFO ][ Step completed s1[1], status: success, result 'prog1' ][ main.task_wrapper ]
-        [ 2016-11-30 10:07:50,649 ][ INFO ][ Running step s2[1] ][ main.task_wrapper ]
-        [ 2016-11-30 10:07:50,649 ][ INFO ][ Step completed s2[1], status: success, result 'prog2' ][ main.task_wrapper ]
-        [ 2016-11-30 10:07:52,688 ][ INFO ][ Running step s3[1] ][ main.task_wrapper ]
-        [ 2016-11-30 10:07:52,689 ][ INFO ][ Step completed s3[1], status: success, result 'prog3' ][ main.task_wrapper ]
-        [ 2016-11-30 10:07:53,700 ][ INFO ][ Processing finished ][ main.loop_session_start ]
+    .. code-block:: python
+        :number-lines:
+
+        [ 2016-12-05 11:56:21,363 ][ INFO ][ Eventor store file: /private/var/acrisel/sand/sequent/sequent/sequent/example/runly00.run.db ]
+        .
+        .
+        [ 2016-12-05 11:56:21,624 ][ INFO ][ doing what prog1 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:24,804 ][ INFO ][ doing what prog2 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:28,032 ][ INFO ][ doing what prog1 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:31,228 ][ INFO ][ doing what prog2 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:34,540 ][ INFO ][ doing what prog3 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:37,845 ][ INFO ][ doing what prog1 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:41,036 ][ INFO ][ doing what prog2 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:44,233 ][ INFO ][ doing what prog1 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:47,425 ][ INFO ][ doing what prog2 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:50,727 ][ INFO ][ doing what prog3 is doing ]
+        .
+        .
+        [ 2016-12-05 11:56:53,928 ][ INFO ][ Processing finished: True ]
 
 Code Highlights
 ===============
 
-    *Eventor* (line 10) defines an in-memory eventor object.  Note that in-memory eventors are none recoverable.
+    For simplicity, code definition of prog (line 7) serves as reusable activity for all the steps in this example.
+    
+    A *Sequent* object is defined (line 14) to host myflow.
+    
+    An hierarchically defines S0 and S00 as *container* steps.  s0 (line )
     
     *add_event* (e.g., line 12) adds an event named **run_step1** to the respective eventor object.
     
@@ -179,34 +215,34 @@ Args
     
     *triggers*: mapping of step statuses to set of events to be triggered as in the following table:
     
-        +-------------+-------------------------------------------+
-        | status      | description                               |
-        +=============+===========================================+
-        | at_ready    | set when task is ready to run (triggered) |
-        +-------------+-------------------------------------------+
-        | at_active   | set when task is running                  |
-        +-------------+-------------------------------------------+
-        | at_success  | set when task is successful               |
-        +-------------+-------------------------------------------+
-        | at_failure  | set when task fails                       |
-        +-------------+-------------------------------------------+
-        | at_complete | stands for success or failure of task     |
-        +-------------+-------------------------------------------+
+        +--------------------+-------------------------------------------+
+        | status             | description                               |
+        +====================+===========================================+
+        | StepState.ready    | set when task is ready to run (triggered) |
+        +--------------------+-------------------------------------------+
+        | StepState.active   | set when task is running                  |
+        +--------------------+-------------------------------------------+
+        | StepState.success  | set when task is successful               |
+        +--------------------+-------------------------------------------+
+        | StepState.failure  | set when task fails                       |
+        +--------------------+-------------------------------------------+
+        | StepState.complete | stands for success or failure of task     |
+        +--------------------+-------------------------------------------+
         
         
     *recovery*: mapping of state status to how step should be handled in recovery:
     
-        +----------+------------------+------------------------------------------------------+
-        | status   | default          | description                                          |
-        +==========+==================+======================================================+
-        | ready    | StepReplay.rerun | if in recovery and previous status is ready, rerun   |
-        +----------+------------------+------------------------------------------------------+
-        | active   | StepReplay.rerun | if in recovery and previous status is active, rerun  |
-        +----------+------------------+------------------------------------------------------+
-        | failure  | StepReplay.rerun | if in recovery and previous status is failure, rerun |
-        +----------+------------------+------------------------------------------------------+
-        | success  | StepReplay.skip  | if in recovery and previous status is success, skip  |
-        +----------+------------------+------------------------------------------------------+
+        +---------------------+------------------+------------------------------------------------------+
+        | status              | default          | description                                          |
+        +=====================+==================+======================================================+
+        | TaskStatus.ready    | StepReplay.rerun | if in recovery and previous status is ready, rerun   |
+        +---------------------+------------------+------------------------------------------------------+
+        | TaskStatus.active   | StepReplay.rerun | if in recovery and previous status is active, rerun  |
+        +---------------------+------------------+------------------------------------------------------+
+        | TaskStatus.failure  | StepReplay.rerun | if in recovery and previous status is failure, rerun |
+        +---------------------+------------------+------------------------------------------------------+
+        | TaskStatus.success  | StepReplay.skip  | if in recovery and previous status is success, skip  |
+        +---------------------+------------------+------------------------------------------------------+
     
     *config*: keywords mapping overrides for step configuration.
     
@@ -259,6 +295,15 @@ Returns
 
     N/A
     
+----------------------
+Additional Information
+----------------------
+
+    Eventor github project (https://github.com/Acrisel/sequent) has additional examples with more complicated flows.
+    
+    
+    
+
 
 
  

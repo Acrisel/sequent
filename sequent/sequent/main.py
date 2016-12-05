@@ -52,7 +52,7 @@ class Sequent(Step):
     def __repr__(self):
         return Step.__repr__(self)
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, config={}, recovery=None, loop=None):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, config={}, recovery=None, repeat=None):
         """add a step to steps object
         
         Args:
@@ -75,11 +75,11 @@ class Sequent(Step):
             config: parameters can include the following keys:
                 - stop_on_exception=True 
                 
-            loop: (iterator) list of value to loop 
+            repeat: (iterator) list of value to repeat 
             
         """
         
-        result=Step.add_step(self, name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, loop=loop) 
+        result=Step.add_step(self, name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat) 
         return result
     
     def add_event(self, require):

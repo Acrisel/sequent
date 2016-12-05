@@ -23,22 +23,25 @@
 
 import sequent as seq
 import logging
+import time
 
 logger=logging.getLogger(__name__)
 
 def prog(progname, success=True):
     logger.info("doing what %s is doing" % progname)
+    time.sleep(3)
     if not success:
         raise Exception("%s failed" % progname)
     return progname
 
 myflow=seq.Sequent(logging_level=logging.INFO)
 
-s0=myflow.add_step('s0', loop=[1,])
-s00=s0.add_step('s00', loop=[1,2,])
+s0=myflow.add_step('s0', repeat=[1,2])
+s00=s0.add_step('s00', repeat=[1,2,])
 
 s1=s00.add_step('s1', func=prog, kwargs={'progname': 'prog1'}) 
 s2=s00.add_step('s2', func=prog, kwargs={'progname': 'prog2'}, require=( (s1, seq.StepStatus.success), )) 
-s3=s00.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, require=( (s2, seq.StepStatus.success), )) 
+
+s3=s0.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, require=( (s00, seq.StepStatus.success), )) 
 
 myflow()
