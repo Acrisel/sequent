@@ -23,25 +23,30 @@
 
 import sequent as seq
 import logging
-import time
 
 logger=logging.getLogger(__name__)
 
-def prog(progname, success=True):
+def prog(flow, progname, success=True):
     logger.info("doing what %s is doing" % progname)
-    time.sleep(3)
+    
     if not success:
         raise Exception("%s failed" % progname)
     return progname
 
-myflow=seq.Sequent(logging_level=logging.INFO)
+myflow=seq.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
 
-s0=myflow.add_step('s0', repeat=[1,2])
-s00=s0.add_step('s00', repeat=[1,2,])
+s1=myflow.add_step('s1', repeat=[1,2])
 
-s1=s00.add_step('s1', func=prog, kwargs={'progname': 'prog1'}) 
-s2=s00.add_step('s2', func=prog, kwargs={'progname': 'prog2'}, require=( (s1, seq.StepStatus.success), )) 
+s11=s1.add_step('s11', repeat=[1,2,])
 
-s3=s0.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, require=( (s00, seq.StepStatus.success), )) 
+s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}) 
+s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, 
+                  require=( (s111, seq.StepStatus.success), )) 
+
+s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
+                require=( (s11, seq.StepStatus.success), )) 
+
+s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4'}, 
+                   require=( (s1, seq.StepStatus.success), )) 
 
 myflow()

@@ -20,39 +20,37 @@
 #
 ##############################################################################
 
-import os
-from acris import MergedChainedDict
 import eventor
-import inspect
 import logging 
 
-from .sequent_types import SequentError, StepStatus
 from .step import Step
-from .event import Event
+from .sequent_types import RunMode
 
 module_logger=logging.getLogger(__name__)
 
 module_logger.setLevel(logging.DEBUG)
 
 #class Sequent(Step):
-class Sequent(Step):
+class Sequent(object):
     
+    #def __init__(self, name='', store='', run_mode=RunMode.restart, recovery_run=None, dedicated_logging=False, logging_level=logging.INFO, config={},):
     def __init__(self, name='', store='', *args, **kwargs):
         """initializes step object            
         """
         
         self.args=args
         self.kwargs=kwargs
-        #Step.__init__(self, name=name, args=args, kwargs=kwargs)
-        super().__init__(name=name, args=args, kwargs=kwargs)
+        #self.repeat=repeat
+        #super().__init__(name=name, args=args, kwargs=kwargs)
+        self.root_step=Step(name=name,)
         calling_module=eventor.calling_module()
         self.store=store if store else eventor.store_from_module(calling_module)
-        self.__steps=self.steps
+        #self.__steps=self.steps
                 
     def __repr__(self):
         return Step.__repr__(self)
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, config={}, recovery=None, repeat=None):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, config={}, recovery=None, repeat=[1,]):
         """add a step to steps object
         
         Args:
@@ -79,19 +77,30 @@ class Sequent(Step):
             
         """
         
-        result=Step.add_step(self, name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat) 
-        return result
+        #step=Step.add_step(self, name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat) 
+        step=self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat)
+        return step
     
     def add_event(self, require):
-        event=Event(require=require)
-        self.__events.append(event)
+        #event=Event(require=require)
+        #self.__events.append(event)
+        event=self.root_step.add_event(require)
         return event
     
+    def get_step_sequence(self):
+        if self.evr:
+            return self.evr.get_step_sequence()
+    
+    def get_step_name(self):
+        if self.evr:
+            return self.evr.get_step_name()
+    
     def __call__(self):
-        evr=eventor.Eventor(*self.args, name=self.path, store=self.store, **self.kwargs)
+        
+        self.evr=eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
         #for step in self.__steps.values():
         #    step.create_flow(evr)
-        self.create_flow(evr)
-        result=evr()
+        self.root_step.create_flow(self.evr)
+        result=self.evr()
         return result
         

@@ -100,10 +100,8 @@ setup_info={'name': NAME,
                  'Programming Language :: Python :: 3.4',
                  'Programming Language :: Python :: 3.5',
                  'Programming Language :: Python :: 3.6',
-                 'Topic :: Software Development :: Libraries :: Application '
-                 'Frameworks',
-                 'Topic :: Software Development :: Libraries :: Python '
-                 'Modules']}
+                 'Topic :: Software Development :: Libraries :: Application Frameworks',
+                 ]}
 setup(**setup_info)
 
 

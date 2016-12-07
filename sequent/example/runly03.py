@@ -22,29 +22,46 @@
 ##############################################################################
 
 import sequent as seq
+import eventor as evr
 import logging
+import math
 
 logger=logging.getLogger(__name__)
 
-def prog(progname, success=True):
-    logger.info("doing what %s is doing" % progname)
-    if not success:
-        raise Exception("%s failed" % progname)
-    return progname
+logger.setLevel(logging.DEBUG)
 
-myflow=seq.Sequent(logging_level=logging.DEBUG, config={'sleep_between_loops': 0.05,})
+def square(x):
+    y=x*x
+    return y
 
-s=myflow.add_step('s0', repeat=[1,2,])
+def square_root(x):
+    y=math.sqrt(x)
+    return y
 
-s1=s.add_step('s1', repeat=[1,2,])
-s11=s1.add_step('s11', func=prog, kwargs={'progname': 'prog11'}) 
-s12=s1.add_step('s12', func=prog, kwargs={'progname': 'prog12'}, require=( ( s11, seq.StepStatus.complete ), ))
+def divide(x,y):
+    z=x/y
+    return z
 
-s2=s.add_step('s2', require=( (s1, seq.StepStatus.complete), ),)
-s21=s2.add_step('s21', func=prog, kwargs={'progname': 'prog21'})
-s22=s2.add_step('s22', func=prog, kwargs={'progname': 'prog21'}, require=( ( s21, seq.StepStatus.complete ), ))
+def build_flow(run_mode=evr.RunMode.restart, param=9):
+    myflow=seq.Sequent(logging_level=logging.INFO, run_mode=run_mode, config={'sleep_between_loops': 0.05,})
+    
+    s0=myflow.add_step('s0', repeat=[1,2])
+    
+    s1=s0.add_step('s1', func=square, kwargs={'x': 3}, ) 
+    
+    s2=s0.add_step('s2', square_root, kwargs={'x': param}, require=[(s1,seq.StepStatus.success), ],
+                   recovery={evr.TaskStatus.failure: evr.StepReplay.rerun, 
+                             evr.TaskStatus.success: evr.StepReplay.skip})
+    
+    s3=s0.add_step('s3', divide, kwargs={'x': 9, 'y': 3}, require=[(s2, seq.StepStatus.success), ])
+    
+    return myflow
 
-e1=s.add_event( ( (s1, seq.StepStatus.complete), (s2, seq.StepStatus.complete), ) )
-s3=s.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, require=(e1,))
+# start regularly; it would fail in step 2
 
-myflow()
+ev=build_flow(param=-9)
+ev()
+
+# rerun in recovery
+ev=build_flow(evr.RunMode.recover, param=9)
+ev()
