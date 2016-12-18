@@ -50,7 +50,7 @@ class Sequent(object):
     def __repr__(self):
         return Step.__repr__(self)
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, config={}, recovery=None, repeat=[1,]):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, acquires=[], releases=None, config={}, recovery=None, repeat=[1,]):
         """add a step to steps object
         
         Args:
@@ -78,7 +78,7 @@ class Sequent(object):
         """
         
         #step=Step.add_step(self, name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat) 
-        step=self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat)
+        step=self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, require=require, acquires=acquires, releases=releases, config=config, recovery=recovery, repeat=repeat)
         return step
     
     def add_event(self, require):

@@ -1,4 +1,3 @@
-
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
@@ -23,6 +22,7 @@
 
 import sequent as seq
 import logging
+import acris.virtual_resource_pool as rp
 
 logger=logging.getLogger(__name__)
 
@@ -33,14 +33,17 @@ def prog(flow, progname, success=True):
         raise Exception("%s failed" % progname)
     return progname
 
+class StepResource(rp.Resource): pass
+rp1=rp.ResourcePool('RP1', resource_cls=StepResource, policy={'resource_limit': 2, }).load()                   
+
 myflow=seq.Sequent(logging_level=logging.DEBUG, config={'sleep_between_loops': 0.05,}, )
 
 s1=myflow.add_step('s1', repeat=range(2) )
 
 s11=s1.add_step('s11', repeat=[1,2,])
 
-s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}) 
-s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, 
+s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}, acquires=[(rp1, 1), ]) 
+s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, acquires=[(rp1, 1), ], 
                   require=( (s111, seq.StepStatus.success), )) 
 
 s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 

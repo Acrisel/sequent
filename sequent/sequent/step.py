@@ -5,12 +5,14 @@ Created on Oct 19, 2016
 '''
 import logging
 import os
-from acris import MergedChainedDict, Sequence
+from acris import MergedChainedDict, Sequence, Mediator
 import collections
 from .sequent_types import SequentError, LogocalOp
 from .event import Event
 from eventor.eventor_types import StepStatus, StepReplay, Invoke
 from eventor.utils import decorate_all, print_method
+import eventor
+from collections.abc import Sequence as AbcSequence
 
 module_logger=logging.getLogger(__name__)
 
@@ -29,23 +31,24 @@ class IterGen(object):
         return (x for x in self.l)
 
 class Container(object):
-    def __init__(self, ev, step, progname, repeat=[1,], iter_triggers=(), end_triggers=()):
+    def __init__(self, ev, step, progname, repeat=[1,], iter_triggers=(), end_triggers=(),):
         module_logger.debug("[ step %s ] Container initialization\n    iter_triggers: %s\n    end_triggers: %s\n    repeat: %s" % (progname, iter_triggers, end_triggers, repeat) )
         self.ev=ev
         self.progname=progname
         self.starters=iter_triggers
         self.enders=end_triggers
-        if isinstance(repeat, collections.Iterable):
+        if isinstance(repeat, AbcSequence):
             repeat=IterGen(repeat)
         self.repeat=repeat
         self.loop_index=0
         self.initiating_sequence=None
         self.step=step
+        self.max_concurrent=self.step.config['max_concurrent']
         self.triggers=None
         
     def __call__(self, initial=False, eventor_task_sequence=''): 
         if initial:
-            self.iter=self.repeat()
+            self.iter=Mediator(self.repeat())
             todos=1
             self.triggers=self.step.create_flow(self.ev, trigger=False,)
             self.initiating_sequence=eventor_task_sequence #self.ev.get_task_sequence()
@@ -64,15 +67,21 @@ class Container(object):
             else:
                 todos=self.ev.count_todos() 
             module_logger.debug("[ Step %s/%s ] TODOs count: %s" % (self.progname, sequence, todos))
-              
+        
+        # for sequential: if it is finished, it can check if there is another item to to.
+        # TODO: for concurrent, need to check if max concurrent reached.  If not, activated another.
+        # TODO: if resources are required, before starting, need to grab resource. 
         if todos <2 or initial:    
             module_logger.debug("[ Step %s/%s ] Trying to get next sequence" % (self.progname, eventor_task_sequence)) 
             try:
                 item=next(self.iter)
-            except StopIteration:
+            except StopIteration :
+                module_logger.debug("[ Step %s ] Received StopIteration (%s)" % (self.progname, self.loop_index,))
                 item=None
+            else:
+                module_logger.debug("[ Step %s ] Received NextIteration: %s (%s)" % (self.progname, repr(item), self.loop_index,))    
                 
-            if item:
+            if item is not None:
                 # TODO - values need to specific to  task sequence
                 #os.environ['SEQUENT_LOOP_VALUE']=str(item)
                 self.loop_index+=1
@@ -82,7 +91,7 @@ class Container(object):
                     sequence=''
                 sequence="%s%s" % (sequence, self.loop_index) 
                 for trigger in self.triggers:
-                    module_logger.debug("[ Step %s ] Triggering starter starter %s/%s" % (self.progname, repr(trigger), self.loop_index,))
+                    module_logger.debug("[ Step %s ] Triggering starter %s/%s" % (self.progname, repr(trigger), self.loop_index,))
                     self.ev.remote_trigger_event(trigger, sequence,)
                 #for trigger in self.starters:
                 #    module_logger.debug("[ Step %s ] triggering starter: %s" % (self.progname, repr(trigger),))
@@ -113,19 +122,20 @@ class Step(object):
         also registered and could be referenced.
         
     """
+    
+    config_defaults=eventor.Eventor.config_defaults
 
-    def __init__(self, parent=None, name=None, func=None, args=[], kwargs={}, config={}, require=(), recovery={}, repeat=[1,]):
-        '''
-        Constructor
-        '''
+    def __init__(self, parent=None, name=None, func=None, args=[], kwargs={}, config={}, require=(), acquires=[], releases=None, recovery={}, repeat=[1,]):
         
         self.id=id
         self.func=func
         self.args=args
         self.kwargs=kwargs
-        self.config=config
+        self.config=MergedChainedDict(config, os.environ, Step.config_defaults)
         self.parent=parent
         self.require=require
+        self.acquires=acquires
+        self.releases=releases if releases is not None else acquires
         self.recovery=recovery
         self.loop=repeat
         self.path=name 
@@ -148,7 +158,7 @@ class Step(object):
     def is_container(self):
         return len(self.__steps) >0
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, config={}, recovery={}, repeat=[1,]):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, acquires=[], releases=None, config={}, recovery={}, repeat=[1,], resources=[]):
         """add a step to steps object
         
         Args:
@@ -165,8 +175,14 @@ class Step(object):
                 If None, None will be used
                 Otherwise, override super-step with this.
                 
-            require: (iterator) list of require objects for this step to be activated.  object can be either Event
-                or tuple pair of (step, status)
+            require: (iterator) list of require objects for this step to be activated.  object can be either 
+                Event or tuple pair of (step, status)
+                
+            acquires: (iterator) list of resource requirements.  Each resource requirements is a tuple of 
+                Resource type and amount.
+
+            releases: (iterator) list of resource to release.  Each resource requirements is a tuple of 
+                Resource type and amount. If not provided, defaults to acquires.
 
             config: parameters can include the following keys:
                 - stop_on_exception=True 
@@ -180,8 +196,8 @@ class Step(object):
         config=MergedChainedDict(config, os.environ, self.config)
         if repeat is None:
             repeat=list()        
-        result=Step( parent=self, name=name, func=func, args=args, kwargs=kwargs, config=config, require=require, recovery=recovery, repeat=repeat)
-        
+        result=Step( parent=self, name=name, func=func, args=args, kwargs=kwargs, config=config, require=require, acquires=acquires, releases=releases, recovery=recovery, repeat=repeat)
+
         if name:
             step=self.__steps.get(result.path, None)
             if step:
@@ -307,12 +323,6 @@ class Step(object):
                     event_name="%s_%s" % (step.path, status.name)
                     event=evr.add_event(event_name)
                     step.triggers.update({status: (event,)})
-                
-            '''
-            if step.is_container():
-                if step != self:
-                    step.__create_eventor_events(evr)
-            '''
                     
         self.__eventor_events=events
         enders=list(set(self.__steps.keys())-set(self.ender_steps.keys()))
@@ -365,7 +375,7 @@ class Step(object):
                 parent=step.parent
                 next_id="%s_%s"% (parent.get_next_event_name(), parent.__sequence_next_step())
                 next_step=evr.add_step(next_id, func=container, kwargs={'initial': False,}, recovery=container_recovery,
-                                       pass_sequence=True, config={'task_construct': Invoke, 'synchrous_run':True})
+                                       config={'task_construct': Invoke, 'max_concurrent':1, 'pass_sequence':True,})
                 steps[next_step.path]=next_step
                 next_event=evr.add_event(next_id)
                 triggers={StepStatus.complete: (next_event, ),}
@@ -396,8 +406,9 @@ class Step(object):
                 step.__container=container
                 module_logger.debug("[ Step %s ] Set container" % (step.path, ))
                 # create first step and event
+
                 first_step=evr.add_step(step.get_start_event_name(), func=container, kwargs={'initial': True,}, recovery=container_recovery,
-                                        pass_sequence=True, config={'task_construct': Invoke, 'synchrous_run':True})
+                                        config={'task_construct': Invoke, 'max_concurrent':1, 'pass_sequence': True,})
                 steps[first_step.path]=first_step
                 start_event=self.__eventor_events[step.get_start_event_name()]
                 evr.add_assoc(start_event, first_step)
