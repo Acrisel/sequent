@@ -221,6 +221,9 @@ class Step(object):
     def get_complete_event_name(self, ):
         return '%s_complete' % self.path
     
+    def get_end_event_name(self, ):
+        return '%s_end' % self.path
+    
     def get_step_name(self, ):
         return '%s' % self.path
     
@@ -265,7 +268,7 @@ class Step(object):
                 #result=arg.id
                 #evr.add_event(result)
                 result=self.convert_require(evr, arg.require)
-            elif type(arg) == tuple:
+            elif isinstance(arg, tuple):
                 if len(arg) == 0:
                     result=''
                 elif len(arg) == 1:
@@ -274,6 +277,7 @@ class Step(object):
                     result=self.or_(evr, *arg[1:])
                 elif len(arg) == 2 and isinstance(arg[0], Step):
                     result=self.get_require_step_event(evr, arg[0], arg[1])
+                    # add to steps that are NOT enders
                     self.ender_steps[arg[0].path]=arg[0]
                 else:    
                     result= "(" + self.expr_to_str(*arg) +")" 
@@ -302,6 +306,7 @@ class Step(object):
         todo=[self,]
         todo.extend(self.__steps.values())
         
+        # convert require into event's expression and fill potential ender_steps
         for event in self.__events:
             expr=self.convert_require(evr, event.require)
             evr.add_event(expr)
@@ -319,17 +324,28 @@ class Step(object):
                 
                 # Add success and failure events
                 step.triggers=dict()
-                for status in [StepStatus.success, StepStatus.failure,]:
+                statuses=[StepStatus.success, StepStatus.failure]                
+                for status in statuses:
                     event_name="%s_%s" % (step.path, status.name)
                     event=evr.add_event(event_name)
                     step.triggers.update({status: (event,)})
+                    events[event.id_]=event
                     
+                # add end event for container steps
+                if step.is_container():
+                    event_name=step.get_end_event_name()
+                    event=evr.add_event(event_name)
+                    step.triggers.update({status: (event,)})
+                    events[event.id_]=event
+                      
         self.__eventor_events=events
+        # since 'convert_requireed' filled ender_steps with those steps that can NOT be enders!!!!
+        # so we remove to be left with enders only steps
         enders=list(set(self.__steps.keys())-set(self.ender_steps.keys()))
         self.__ender_events=dict()
         self.ender_steps=dict()
         for step_path in enders:
-            #if step.path not in self.__ender_steps.keys():
+            # if step.path not in self.__ender_steps.keys():
             step=self.__steps[step_path]
             event=evr.add_event(step.get_complete_event_name())
             self.__ender_events[step_path]=event
@@ -337,12 +353,14 @@ class Step(object):
 
         module_logger.debug("[ Step %s ] Starter and enders events\n    Starter: %s\n    Ender:%s" % (self.path, self.__starter_events, self.__ender_events))
             
-            
     def __get_eventor_step_start_event(self, step):
         return self.__events[step.get_start_event_name()]
     
     def __get_eventor_step_next_event(self, step):
         return self.__events[step.get_next_event_name()]
+    
+    def __get_eventor_step_end_event(self, step):
+        return self.__events[step.get_end_event_name()]
     
     def __create_eventor_steps(self, evr,):
         steps=dict()
@@ -355,6 +373,8 @@ class Step(object):
             StepStatus.active: StepReplay.rerun, 
             StepStatus.failure: StepReplay.rerun, 
             StepStatus.success: StepReplay.rerun,
+            StepStatus.allocate: StepReplay.rerun,
+            StepStatus.fueled: StepReplay.rerun,
             }  
 
         for step in todo:
@@ -371,11 +391,13 @@ class Step(object):
             step_is_ender=step.path in self.ender_steps.keys()
             event_is_starter=False if step.require else True
             
+            # If it is ender step, and it is within super-step, it must trigger next.
             if step_is_ender and container is not None:
                 parent=step.parent
-                next_id="%s_%s"% (parent.get_next_event_name(), parent.__sequence_next_step())
+                #next_id="%s_%s"% (parent.get_next_event_name(), parent.__sequence_next_step())
+                next_id=parent.get_next_event_name()
                 next_step=evr.add_step(next_id, func=container, kwargs={'initial': False,}, recovery=container_recovery,
-                                       config={'task_construct': Invoke, 'max_concurrent':1, 'pass_sequence':True,})
+                                       config={'task_construct': Invoke, 'max_concurrent':1, 'sequence_arg_name':'eventor_task_sequence',})
                 steps[next_step.path]=next_step
                 next_event=evr.add_event(next_id)
                 triggers={StepStatus.complete: (next_event, ),}
@@ -384,7 +406,7 @@ class Step(object):
             
             if not step.is_container():                    
                 evr_step=evr.add_step(step.get_step_name(), func=step.func, args=step.args, kwargs=step.kwargs, 
-                                      triggers=triggers, config=step.config)
+                                      acquires=step.acquires, releases=step.releases, triggers=triggers, config=step.config)
                 steps[step.path]=evr_step
                 start_event=self.__eventor_events[step.get_start_event_name()]
                 evr.add_assoc(start_event, evr_step)
@@ -402,13 +424,22 @@ class Step(object):
                 except:
                     enders=tuple()
                     
-                container=Container(ev=evr, step=step, progname=step.path, repeat=step.loop, iter_triggers=startes, end_triggers=enders)
+                # create end step
+                end_step=evr.add_step(step.get_end_event_name(), recovery=container_recovery, releases=step.releases,
+                                      config={'task_construct': Invoke, 'max_concurrent':1,}, triggers=enders)
+                #                      config={'task_construct': Invoke, 'max_concurrent':1,}, triggers=enders)
+                end_event=self.__eventor_events[step.get_end_event_name()]
+                evr.add_assoc(end_event, end_step)
+                
+                #container=Container(ev=evr, step=step, progname=step.path, repeat=step.loop, iter_triggers=startes, end_triggers=enders)
+                container=Container(ev=evr, step=step, progname=step.path, repeat=step.loop, iter_triggers=startes, 
+                                    end_triggers={StepStatus.success:(end_event,), StepStatus.failure:(end_event,),})
                 step.__container=container
                 module_logger.debug("[ Step %s ] Set container" % (step.path, ))
                 # create first step and event
 
                 first_step=evr.add_step(step.get_start_event_name(), func=container, kwargs={'initial': True,}, recovery=container_recovery,
-                                        config={'task_construct': Invoke, 'max_concurrent':1, 'pass_sequence': True,})
+                                        acquires=step.acquires, config={'task_construct': Invoke, 'max_concurrent':1, 'sequence_arg_name': 'eventor_task_sequence',})
                 steps[first_step.path]=first_step
                 start_event=self.__eventor_events[step.get_start_event_name()]
                 evr.add_assoc(start_event, first_step)
@@ -432,6 +463,7 @@ class Step(object):
             for trigger in start_evensts:
                 module_logger.debug("[ Step %s ] Triggering event %s" % (self.path, trigger,))
                 evr.trigger_event(trigger, '1')
+        module_logger.debug('[ Step %s ] Flow: %s' % (self.path, repr(self)))  
         return start_evensts
-        #print('start event', repr(start_event))       
+             
     
