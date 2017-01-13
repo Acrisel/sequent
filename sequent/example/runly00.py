@@ -33,7 +33,7 @@ def prog(flow, progname, success=True):
         raise Exception("%s failed" % progname)
     return progname
 
-myflow=seq.Sequent(logging_level=logging.DEBUG, config={'sleep_between_loops': 0.05,}, )
+myflow=seq.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
 
 s1=myflow.add_step('s1', repeat=range(2) )
 

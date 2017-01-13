@@ -23,7 +23,7 @@
 
 import sequent as sqnt
 import logging
-from acris.virtual_resource_pool import Resource, ResourcePool
+from acris import virtual_resource_pool as vrp
 
 logger=logging.getLogger(__name__)
 
@@ -35,14 +35,14 @@ def prog(flow, progname, step_to_fail=None, iteration_to_fail=''):
         raise Exception("%s failed (%s/%s)" % (progname, step_name, step_sequence))
     return progname
 
-class Resources1(Resource): pass
-class Resources2(Resource): pass
+class Resources1(vrp.Resource): pass
+class Resources2(vrp.Resource): pass
 
 def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fail=''):
     myflow=sqnt.Sequent(logging_level=logging.INFO, run_mode=run_mode, config={'sleep_between_loops': 0.05,}, )
     
-    rp1=ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 2, })
-    rp2=ResourcePool('rp1', resource_cls=Resources2, policy={'resource_limit': 2, })
+    rp1=vrp.ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 2, })
+    rp2=vrp.ResourcePool('rp1', resource_cls=Resources2, policy={'resource_limit': 2, })
 
     s1=myflow.add_step('s1', repeat=[1,2], acquires=[(rp1, 2), ])
     
