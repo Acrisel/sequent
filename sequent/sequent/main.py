@@ -30,10 +30,8 @@ module_logger=logging.getLogger(__name__)
 
 module_logger.setLevel(logging.DEBUG)
 
-#class Sequent(Step):
 class Sequent(object):
     
-    #def __init__(self, name='', store='', run_mode=RunMode.restart, recovery_run=None, dedicated_logging=False, logging_level=logging.INFO, config={},):
     def __init__(self, name='', store='', *args, **kwargs):
         """initializes step object            
         """
@@ -77,13 +75,10 @@ class Sequent(object):
             
         """
         
-        #step=Step.add_step(self, name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat) 
         step=self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, requires=requires, delay=delay, acquires=acquires, releases=releases, config=config, recovery=recovery, repeat=repeat)
         return step
     
     def add_event(self, require):
-        #event=Event(require=require)
-        #self.__events.append(event)
         event=self.root_step.add_event(require)
         return event
     
@@ -98,8 +93,6 @@ class Sequent(object):
     def __call__(self, max_loops=-1):
         
         self.evr=eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
-        #for step in self.__steps.values():
-        #    step.create_flow(evr)
         self.root_step.create_flow(self.evr)
         result=self.evr(max_loops=max_loops)
         return result

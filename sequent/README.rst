@@ -199,7 +199,7 @@ Sequent add_step method
 
     .. code::
         
-        add_step(name, func, args=(), kwargs={}, requires={}, acquires=[], releases=None, recovery={}, config={})
+        add_step(name, func, args=(), kwargs={}, requires={}, delay=0, acquires=[], releases=None, recovery={}, config={})
 
 Args
 ````
