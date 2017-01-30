@@ -31,6 +31,9 @@ class IterGen(object):
         return (x for x in self.l)
 
 class Container(object):
+    ''' Representation for package task that incorporate one or more other tasks.
+    '''
+    
     def __init__(self, ev, step, progname, repeat=[1,], iter_triggers=(), end_triggers=(),):
         module_logger.debug("[ step %s ] Container initialization\n    iter_triggers: %s\n    end_triggers: %s\n    repeat: %s" % (progname, iter_triggers, end_triggers, repeat) )
         self.ev=ev
@@ -125,7 +128,7 @@ class Step(object):
     
     config_defaults=eventor.Eventor.config_defaults
 
-    def __init__(self, parent=None, name=None, func=None, args=[], kwargs={}, config={}, require=(), acquires=[], releases=None, recovery={}, repeat=[1,]):
+    def __init__(self, parent=None, name=None, func=None, args=[], kwargs={}, config={}, requires=(), delay=0, acquires=[], releases=None, recovery={}, repeat=[1,]):
         
         self.id=id
         self.func=func
@@ -133,7 +136,8 @@ class Step(object):
         self.kwargs=kwargs
         self.config=MergedChainedDict(config, os.environ, Step.config_defaults)
         self.parent=parent
-        self.require=require
+        self.require=requires
+        self.delay=delay
         self.acquires=acquires
         self.releases=releases if releases is not None else acquires
         self.recovery=recovery
@@ -158,37 +162,29 @@ class Step(object):
     def is_container(self):
         return len(self.__steps) >0
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, acquires=[], releases=None, config={}, recovery={}, repeat=[1,], resources=[]):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=None, delay=0, acquires=[], releases=None, config={}, recovery={}, repeat=[1,], resources=[]):
         """add a step to steps object
         
         Args:
             
             name: (string) unique identifier for this step
-            
             func: (callable) optional function to execute when step is activated
-            
             args: replacing super-step args.  
                 If None, super-step args will be used.  
                 Otherwise, this will be used
-            
             kwargs: overriding super-step kwargs.
                 If None, None will be used
                 Otherwise, override super-step with this.
-                
-            require: (iterator) list of require objects for this step to be activated.  object can be either 
+            requires: (iterator) list of require objects for this step to be activated.  object can be either 
                 Event or tuple pair of (step, status)
-                
+            delay: seconds to delay execution of step after its requires are met.
             acquires: (iterator) list of resource requirements.  Each resource requirements is a tuple of 
                 Resource type and amount.
-
             releases: (iterator) list of resource to release.  Each resource requirements is a tuple of 
                 Resource type and amount. If not provided, defaults to acquires.
-
             config: parameters can include the following keys:
                 - stop_on_exception=True 
-                
             recovery: map step status to recovery option
-                
             repeat: (iterator) list of value to repeat 
             
         """
@@ -196,7 +192,7 @@ class Step(object):
         config=MergedChainedDict(config, os.environ, self.config)
         if repeat is None:
             repeat=list()        
-        result=Step( parent=self, name=name, func=func, args=args, kwargs=kwargs, config=config, require=require, acquires=acquires, releases=releases, recovery=recovery, repeat=repeat)
+        result=Step( parent=self, name=name, func=func, args=args, kwargs=kwargs, config=config, requires=requires, delay=delay, acquires=acquires, releases=releases, recovery=recovery, repeat=repeat)
 
         if name:
             step=self.__steps.get(result.path, None)
@@ -265,14 +261,12 @@ class Step(object):
             if type(arg) == str:
                 result=arg
             elif isinstance(arg, Event):
-                #result=arg.id
-                #evr.add_event(result)
                 result=self.convert_require(evr, arg.require)
             elif isinstance(arg, tuple):
                 if len(arg) == 0:
                     result=''
-                elif len(arg) == 1:
-                    result= self.expr_to_str(*arg)
+                #elif len(arg) == 1:
+                #    result= self.expr_to_str(*arg)
                 elif arg[0] == LogocalOp.or_:
                     result=self.or_(evr, *arg[1:])
                 elif len(arg) == 2 and isinstance(arg[0], Step):
@@ -409,7 +403,7 @@ class Step(object):
                                       acquires=step.acquires, releases=step.releases, triggers=triggers, config=step.config)
                 steps[step.path]=evr_step
                 start_event=self.__eventor_events[step.get_start_event_name()]
-                evr.add_assoc(start_event, evr_step)
+                evr.add_assoc(start_event, evr_step, delay=step.delay)
                 if event_is_starter:
                     start_events.append(start_event)
             else:
@@ -442,7 +436,7 @@ class Step(object):
                                         acquires=step.acquires, config={'task_construct': Invoke, 'max_concurrent':1, 'sequence_arg_name': 'eventor_task_sequence',})
                 steps[first_step.path]=first_step
                 start_event=self.__eventor_events[step.get_start_event_name()]
-                evr.add_assoc(start_event, first_step)
+                evr.add_assoc(start_event, first_step, delay=step.delay)
                 if event_is_starter:
                     start_events.append(start_event)
                 '''

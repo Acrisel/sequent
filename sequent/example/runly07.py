@@ -26,25 +26,27 @@ import logging
 
 logger=logging.getLogger(__name__)
 
-def prog(progname, success=True):
+def prog(flow, progname, success=True):
     logger.info("doing what %s is doing" % progname)
+    
     if not success:
         raise Exception("%s failed" % progname)
     return progname
 
-myflow=seq.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,})
+myflow=seq.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
 
-s=myflow.add_step('s0', repeat=[1,2,])
+s1=myflow.add_step('s1', repeat=range(2) )
 
-s1=s.add_step('s1', repeat=[1,2,])
-s11=s1.add_step('s11', func=prog, kwargs={'progname': 'prog11'}) 
-s12=s1.add_step('s12', func=prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
+s11=s1.add_step('s11', repeat=[1,2,])
 
-s2=s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
-s21=s2.add_step('s21', func=prog, kwargs={'progname': 'prog21'})
-s22=s2.add_step('s22', func=prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.StepStatus.complete ), ))
+s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}) 
+s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, 
+                  requires=( (s111, seq.StepStatus.success), )) 
 
-e1=s.add_event( ( (s1, seq.StepStatus.complete), (s2, seq.StepStatus.complete), ) )
-s3=s.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, requires=(e1,))
+s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
+                requires=( (s11, seq.StepStatus.success), ), delay=30) 
+
+s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4'}, 
+                   requires=( (s1, seq.StepStatus.success), )) 
 
 myflow()

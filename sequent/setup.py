@@ -79,7 +79,7 @@ setup_info={'name': NAME,
  'description': DESCRIPTION,
  'long_description': open("README.rst", "r").read(),
  'license': 'MIT',
- 'keywords': 'framefork workflow flow program dependency dependencies procedural procedure sequential recovery restart',
+ 'keywords': 'framework workflow flow program dependency dependencies procedural procedure sequential recovery restart',
  'packages': [PACKAGE],
  'install_requires': [
      'SQLAlchemy>=1.1.4',

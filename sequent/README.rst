@@ -2,9 +2,15 @@
 Sequent
 =======
 
---------
+------------------------------------------------------------
+Programming interface to use in programs to create task flow
+------------------------------------------------------------
+
+.. contents:: Table of Contents
+   :depth: 1
+
 Overview
---------
+========
 
     *Sequent* provides programmer with interface to create flow.  *Sequent* is useful when there are multiple batch processes that should link together in processing flow.
     
@@ -19,7 +25,7 @@ Overview
     It would be easier to show an example. In this example, *Step s2* would run after *Step s1* would loop twice. When they are done, *Step s3* will run.  This flow would be repeat twice.
 
 Simple Example
-==============
+--------------
     
     .. code-block:: python
         :number-lines:
@@ -55,7 +61,7 @@ Simple Example
         myflow() 
            
 Example Output
-==============
+--------------
 
     The above example with provide the following log output.  Note more detailed logging activities was stripped off.  Only actual shows actual program activity is shown.
     
@@ -89,7 +95,7 @@ Example Output
         [ 2016-12-07 11:14:32,713 ][ INFO ][ Processing finished with: success ]
 
 Code Highlights
-===============
+---------------
 
     For simplicity, code definition of prog (line 6) serves as reusable activity for all the steps in this example.
     
@@ -103,12 +109,9 @@ Code Highlights
     
     Finally, on line 29 the flow is executed using *myflow()*.
  
------------------
-Sequent Interface
------------------
 
-Sequent
-=======
+Sequent Interface
+=================
 
 Sequent Class Initiator
 -----------------------
@@ -196,7 +199,7 @@ Sequent add_step method
 
     .. code::
         
-        add_step(name, func, args=(), kwargs={}, triggers={}, acquires=[], releases=None, recovery={}, config={})
+        add_step(name, func, args=(), kwargs={}, requires={}, acquires=[], releases=None, recovery={}, config={})
 
 Args
 ````
@@ -209,7 +212,7 @@ Args
     
     *kwargs*: keywords arguments that will be pust to *func* at calling
     
-    *triggers*: mapping of step statuses to set of events to be triggered as in the following table:
+    *requires*: mapping of step statuses such that when set of events, added step will be launched:
     
         +--------------------+-------------------------------------------+
         | status             | description                               |
@@ -225,6 +228,9 @@ Args
         | StepState.complete | stands for success or failure of task     |
         +--------------------+-------------------------------------------+
         
+    *delay*: seconds to wait before executing step once ts requires are available.  Actual execution 
+        may be delayed further if resources needs to be acquired.
+    
     *acquires*: list of tuples of resource pool and amount of resources to acquire before starting. 
     
     *releases*: list of tuples of resources pool and amount of resources to release once completed.
@@ -258,10 +264,29 @@ Returns
 
     Step object to use in add_assoc method.
 
+Sequent __call__ method
+-----------------------
 
-------------------------
+    .. code-block:: python
+    
+        sequent(max_loops=-1)
+        
+when calling sequent, information is built and loops evaluating events and task starts are executed.  
+In each loop events are raised and tasks are performed.  max_loops parameters allows control of how many
+loops to execute.
+
+In simple example, **myflow()** engage Sequnt's __call__() method.
+        
+Args
+````
+
+    *max_loops*: max_loops: number of loops to run.  If positive, limits number of loops.
+                 defaults to negative, which would run loops until there are no events to raise and
+                 no task to run. 
+
+
 Recovery
-------------------------
+========
 
     Recovery allows rerun of a program in a way that it will skip successful steps.  To use recovery, store mast be physical (cannot use in-memory).  
     
@@ -270,7 +295,7 @@ Recovery
     Here is an example for recovery program and run.
     
 Recovery Example
-================
+----------------
 
     .. code-block:: python
         :number-lines:
@@ -324,7 +349,7 @@ Recovery Example
         myflow()
     
 Example Output
-==============
+--------------
 
     .. code:: 
         :number-lines:
@@ -371,7 +396,7 @@ Example Output
         [ 2016-12-07 14:49:29,002 ][ INFO ][ Processing finished with: success ]
 
 Example Highlights
-==================
+------------------
     
     The function *build_flow* (code line 14) build a Sequent flow similarly to simple example above.  Since no specific store is provided in Sequent instantiation, a default runner store is assigned (code line 15). In this build, steps will use default recovery directives whereby successful steps are skipped.  
     
@@ -386,6 +411,7 @@ Example Highlights
     
          name=os.getenv('EVENTOR_STEP_NAME')
          sequence=os.getenv('EVENTOR_STEP_SEQUENCE')
+         recovery=os.getenv('EVENTOR_STEP_RECOVERY')
 
 Resources
 =========
@@ -417,9 +443,8 @@ Example for resources definitions
         myflow=sqnt.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
         s1=myflow.add_step('s1', repeat=[1,2], acquires=[(rp1, 2), ])
     
-----------------------
 Additional Information
-----------------------
+======================
 
     Sequent github project (https://github.com/Acrisel/sequent) has additional examples with more complicated flows.
     

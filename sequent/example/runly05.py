@@ -54,17 +54,17 @@ def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fa
     s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2', 
                                                  'step_to_fail':step_to_fail, 
                                                  'iteration_to_fail':iteration_to_fail,}, 
-                      require=( (s111, sqnt.StepStatus.success), )) 
+                      requires=( (s111, sqnt.StepStatus.success), )) 
     
     s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3', 
                                               'step_to_fail':step_to_fail, 
                                               'iteration_to_fail':iteration_to_fail,}, 
-                    require=( (s11, sqnt.StepStatus.success), )) 
+                    requires=( (s11, sqnt.StepStatus.success), )) 
     
     s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4', 
                                                 'step_to_fail':step_to_fail, 
                                                 'iteration_to_fail':iteration_to_fail,}, 
-                       require=( (s1, sqnt.StepStatus.success), )) 
+                       requires=( (s1, sqnt.StepStatus.success), )) 
     return myflow
 
 myflow=build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')

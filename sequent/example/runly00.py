@@ -41,12 +41,12 @@ s11=s1.add_step('s11', repeat=[1,2,])
 
 s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}) 
 s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, 
-                  require=( (s111, seq.StepStatus.success), )) 
+                  requires=( (s111, seq.StepStatus.success), )) 
 
 s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
-                require=( (s11, seq.StepStatus.success), )) 
+                requires=( (s11, seq.StepStatus.success), )) 
 
 s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4'}, 
-                   require=( (s1, seq.StepStatus.success), )) 
+                   requires=( (s1, seq.StepStatus.success), )) 
 
 myflow()

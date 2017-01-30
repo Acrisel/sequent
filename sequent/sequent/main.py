@@ -50,7 +50,7 @@ class Sequent(object):
     def __repr__(self):
         return Step.__repr__(self)
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, require=None, acquires=[], releases=None, config={}, recovery=None, repeat=[1,]):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=None, delay=0, acquires=[], releases=None, config={}, recovery=None, repeat=[1,]):
         """add a step to steps object
         
         Args:
@@ -67,7 +67,7 @@ class Sequent(object):
                 If None, None will be used
                 Otherwise, override super-step with this.
                 
-            require: (iterator) list of require objects for this step to be activated.  object can be either Event
+            requires: (iterator) list of require objects for this step to be activated.  object can be either Event
                 or tuple pair of (step, status)
 
             config: parameters can include the following keys:
@@ -78,7 +78,7 @@ class Sequent(object):
         """
         
         #step=Step.add_step(self, name=name, func=func, args=args, kwargs=kwargs, require=require, config=config, recovery=recovery, repeat=repeat) 
-        step=self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, require=require, acquires=acquires, releases=releases, config=config, recovery=recovery, repeat=repeat)
+        step=self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, requires=requires, delay=delay, acquires=acquires, releases=releases, config=config, recovery=recovery, repeat=repeat)
         return step
     
     def add_event(self, require):
@@ -95,12 +95,12 @@ class Sequent(object):
         if self.evr:
             return self.evr.get_step_name()
     
-    def __call__(self):
+    def __call__(self, max_loops=-1):
         
         self.evr=eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
         #for step in self.__steps.values():
         #    step.create_flow(evr)
         self.root_step.create_flow(self.evr)
-        result=self.evr()
+        result=self.evr(max_loops=max_loops)
         return result
         

@@ -49,11 +49,11 @@ def build_flow(run_mode=evr.RunMode.restart, param=9):
     
     s1=s0.add_step('s1', func=square, kwargs={'x': 3}, ) 
     
-    s2=s0.add_step('s2', square_root, kwargs={'x': param}, require=[(s1,seq.StepStatus.success), ],
+    s2=s0.add_step('s2', square_root, kwargs={'x': param}, requires=[(s1,seq.StepStatus.success), ],
                    recovery={evr.TaskStatus.failure: evr.StepReplay.rerun, 
                              evr.TaskStatus.success: evr.StepReplay.skip})
     
-    s3=s0.add_step('s3', divide, kwargs={'x': 9, 'y': 3}, require=[(s2, seq.StepStatus.success), ])
+    s3=s0.add_step('s3', divide, kwargs={'x': 9, 'y': 3}, requires=[(s2, seq.StepStatus.success), ])
     
     return myflow
 
