@@ -53,7 +53,7 @@ URL = 'https://github.com/Acrisel/sequent'
 version_file=os.path.join(PACKAGE, 'VERSION.py')
 with open(version_file, 'r') as vf:
     vline=vf.read()
-VERSION = vline.partition('=')[2]
+VERSION = vline.strip().partition('=')[2].replace("'", "")
 #VERSION =__import__(version_file).__version__
 
 # Warn if we are installing over top of an existing installation. This can
