@@ -29,7 +29,7 @@ logger=logging.getLogger(__name__)
 
 def prog(flow, progname, success=True):
     logger.info("doing what %s is doing" % progname)
-    time.sleep(30)
+    time.sleep(1)
     if not success:
         raise Exception("%s failed" % progname)
     return progname

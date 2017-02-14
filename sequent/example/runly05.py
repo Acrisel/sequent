@@ -39,10 +39,10 @@ class Resources1(vrp.Resource): pass
 class Resources2(vrp.Resource): pass
 
 def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fail=''):
-    myflow=sqnt.Sequent(logging_level=logging.INFO, run_mode=run_mode, config={'sleep_between_loops': 0.05,}, )
+    myflow=sqnt.Sequent(logging_level=logging.DEBUG, run_mode=run_mode, config={'sleep_between_loops': 0.05,}, )
     
-    rp1=vrp.ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 2, })
-    rp2=vrp.ResourcePool('rp1', resource_cls=Resources2, policy={'resource_limit': 2, })
+    rp1=vrp.ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 4, })
+    rp2=vrp.ResourcePool('rp2', resource_cls=Resources2, policy={'resource_limit': 4, })
 
     s1=myflow.add_step('s1', repeat=[1,2], acquires=[(rp1, 2), ])
     
@@ -67,8 +67,12 @@ def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fa
                        requires=( (s1, sqnt.StepStatus.success), )) 
     return myflow
 
-myflow=build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
-myflow()
+#myflow=build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
+#result=myflow()
+#print('run result: %s' % repr(result))
+
 
 myflow=build_flow(run_mode=sqnt.RunMode.recover, )
-myflow()
+#myflow=build_flow()
+result=myflow()
+print('run result: %s' % repr(result))

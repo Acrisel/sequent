@@ -136,6 +136,7 @@ class Step(object):
         self.kwargs=kwargs
         self.config=MergedChainedDict(config, os.environ, Step.config_defaults)
         self.parent=parent
+        self.root_step=self if parent is None else parent if self.parent.root_step is None else self.parent.root_step
         self.require=requires
         self.delay=delay
         self.acquires=acquires
@@ -146,12 +147,37 @@ class Step(object):
         if self.parent and parent.path:
             self.path='%s_%s' % (parent.path, name)
             
+        self.__all_requires=dict()
+        
+        if requires is not None:
+            for require in requires:
+                self.__add_all_requires(require)
+                #if len(event) > 1:
+                #    req_step, state = event
+                #    req_list=self.root_step.all_requires.get(req_step, list())
+                #    self.root_step.all_requires[req_step]=req_list
+                #    req_list=list(set(req_list.append(state)))
+                
+        
+        #print('all_requires:', repr(self.root_step.all_requires))
+            
         self.__sequence_next_step=Sequence("SequentNextStep")
         
         self.__steps=dict()
         self.steps=self.__steps
         self.__events=list()
         self.__container=None
+        
+    def __add_all_requires(self, require):
+        if isinstance(require, tuple):
+            req_step, state = require
+            req_list=self.root_step.__all_requires.get(req_step.path, list())
+            self.root_step.__all_requires[req_step.path]=req_list
+            if state != StepStatus.complete:
+                req_list.append(state)
+            else:
+                req_list.extend([StepStatus.success, StepStatus.failure])
+            req_list=list(set(req_list))
         
     def __repr__(self):
         return "Step( path(%s), step(%s),)" % (self.path, self.__steps)
@@ -270,6 +296,7 @@ class Step(object):
                 elif arg[0] == LogocalOp.or_:
                     result=self.or_(evr, *arg[1:])
                 elif len(arg) == 2 and isinstance(arg[0], Step):
+                    self.__add_all_requires(arg)
                     result=self.get_require_step_event(evr, arg[0], arg[1])
                     # add to steps that are NOT enders
                     self.ender_steps[arg[0].path]=arg[0]
@@ -304,6 +331,8 @@ class Step(object):
         for event in self.__events:
             expr=self.convert_require(evr, event.require)
             evr.add_event(expr)
+            
+        #print('self.root_step.__all_requires', repr(self.root_step.__all_requires))
         # dive into steps
         for step in todo:
             if self != step:
@@ -318,9 +347,12 @@ class Step(object):
                 
                 # Add success and failure events
                 step.triggers=dict()
-                statuses=[StepStatus.success, StepStatus.failure]                
+                statuses=[StepStatus.success, StepStatus.failure] 
+                all_requires=self.root_step.__all_requires.get(step.path, [])               
                 for status in statuses:
+                    if status not in all_requires and step.parent is not None: continue
                     event_name="%s_%s" % (step.path, status.name)
+                    #print('event:', event_name)
                     event=evr.add_event(event_name)
                     step.triggers.update({status: (event,)})
                     events[event.id_]=event
