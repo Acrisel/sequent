@@ -367,7 +367,8 @@ Recovery Example
 
         # creating flow simulating failure
         myflow=build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
-        myflow()
+        myflow.run()
+        myflow.close()
 
         # creating recovery flow
         myflow=build_flow(run_mode=sqnt.RunMode.recover, )
