@@ -34,9 +34,9 @@ def prog(progname, success=True):
 
 myflow=seq.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,})
 
-s=myflow.add_step('s0', repeat=[1,2,])
+s=myflow.add_step('s0', repeats=[1,2,])
 
-s1=s.add_step('s1', repeat=[1,2,])
+s1=s.add_step('s1', repeats=[1,2,])
 s11=s1.add_step('s11', func=prog, kwargs={'progname': 'prog11'}) 
 s12=s1.add_step('s12', func=prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
 

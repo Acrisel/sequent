@@ -342,9 +342,9 @@ Recovery Example
             myflow=sqnt.Sequent(logging_level=logging.INFO, run_mode=run_mode, 
                                 config={'sleep_between_loops': 0.05,}, )
 
-            s1=myflow.add_step('s1', repeat=[1,2])
+            s1=myflow.add_step('s1', repeats=[1,2])
     
-            s11=s1.add_step('s11', repeat=[1,2,])
+            s11=s1.add_step('s11', repeats=[1,2,])
     
             s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1', 
                                                          'step_to_fail':step_to_fail, 
@@ -468,7 +468,7 @@ Example for resources definitions
         rp2=vrp.ResourcePool('RP2', resource_cls=Resources2, policy={'resource_limit': 2, }).load()
         
         myflow=sqnt.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
-        s1=myflow.add_step('s1', repeat=[1,2], acquires=[(rp1, 2), ])
+        s1=myflow.add_step('s1', repeats=[1,2], acquires=[(rp1, 2), ])
     
 Additional Information
 ======================

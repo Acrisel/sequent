@@ -128,7 +128,7 @@ class Step(object):
     
     config_defaults=eventor.Eventor.config_defaults
 
-    def __init__(self, parent=None, name=None, func=None, args=[], kwargs={}, config={}, requires=(), delay=0, acquires=[], releases=None, recovery={}, repeat=[1,]):
+    def __init__(self, parent=None, name=None, func=None, args=[], kwargs={}, config={}, requires=(), delay=0, acquires=[], releases=None, recovery={}, repeats=[1,]):
         
         self.id=id
         self.func=func
@@ -142,7 +142,7 @@ class Step(object):
         self.acquires=acquires
         self.releases=releases if releases is not None else acquires
         self.recovery=recovery
-        self.loop=repeat
+        self.loop=repeats
         self.path=name 
         if self.parent and parent.path:
             self.path='%s_%s' % (parent.path, name)
@@ -188,7 +188,7 @@ class Step(object):
     def is_container(self):
         return len(self.__steps) >0
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=None, delay=0, acquires=[], releases=None, config={}, recovery={}, repeat=[1,], resources=[]):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=None, delay=0, acquires=[], releases=None, config={}, recovery={}, repeats=[1,], resources=[]):
         """add a step to steps object
         
         Args:
@@ -216,9 +216,9 @@ class Step(object):
         """
          
         config=MergedChainedDict(config, os.environ, self.config)
-        if repeat is None:
-            repeat=list()        
-        result=Step( parent=self, name=name, func=func, args=args, kwargs=kwargs, config=config, requires=requires, delay=delay, acquires=acquires, releases=releases, recovery=recovery, repeat=repeat)
+        if repeats is None:
+            repeats=list()        
+        result=Step( parent=self, name=name, func=func, args=args, kwargs=kwargs, config=config, requires=requires, delay=delay, acquires=acquires, releases=releases, recovery=recovery, repeats=repeats)
 
         if name:
             step=self.__steps.get(result.path, None)

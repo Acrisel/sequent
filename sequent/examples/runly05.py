@@ -44,9 +44,9 @@ def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fa
     rp1=vrp.ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 4, })
     rp2=vrp.ResourcePool('rp2', resource_cls=Resources2, policy={'resource_limit': 4, })
 
-    s1=myflow.add_step('s1', repeat=[1,2], acquires=[(rp1, 2), ])
+    s1=myflow.add_step('s1', repeats=[1,2], acquires=[(rp1, 2), ])
     
-    s11=s1.add_step('s11', repeat=[1,2,], acquires=[(rp2, 2), ])
+    s11=s1.add_step('s11', repeats=[1,2,], acquires=[(rp2, 2), ])
     
     s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1', 
                                                  'step_to_fail':step_to_fail, 
