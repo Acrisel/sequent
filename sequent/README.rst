@@ -44,9 +44,9 @@ Simple Example
         myflow=seq.Sequent(logging_level=logging.INFO, 
                            config={'sleep_between_loops': 0.05,})
 
-        s1=myflow.add_step('s1', repeat=[1,2])
+        s1=myflow.add_step('s1', repeats=[1,2])
 
-        s11=s1.add_step('s11', repeat=[1,2,])
+        s11=s1.add_step('s11', repeats=[1,2,])
 
         s111=s11.add_step('s111', func=prog, kwargs={'progname': 'prog1'}) 
         s112=s11.add_step('s112', func=prog, kwargs={'progname': 'prog2'}, 
