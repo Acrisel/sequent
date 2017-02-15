@@ -58,7 +58,8 @@ Simple Example
         s2=myflow.add_step('s2', func=prog, kwargs={'progname': 'prog4'}, 
                            requires=( (s1, seq.StepStatus.success), )) 
 
-        myflow() 
+        myflow.run() 
+        myflow.close()
            
 Example Output
 --------------
@@ -264,18 +265,18 @@ Returns
 
     Step object to use in add_assoc method.
 
-Sequent __call__ method
------------------------
+Sequent run method
+------------------
 
     .. code-block:: python
     
-        sequent(max_loops=-1)
+        run(max_loops=-1)
         
-when calling sequent, information is built and loops evaluating events and task starts are executed.  
+when calling *run* method, information is built and loops evaluating events and task starts are executed.  
 In each loop events are raised and tasks are performed.  max_loops parameters allows control of how many
 loops to execute.
 
-In simple example, **myflow()** engage Sequnt's __call__() method.
+In simple example, **myflow.run()** engage Sequent's run() method.
         
 Args
 ````
@@ -283,6 +284,30 @@ Args
     *max_loops*: max_loops: number of loops to run.  If positive, limits number of loops.
                  defaults to negative, which would run loops until there are no events to raise and
                  no task to run. 
+                 
+Returns
+```````
+
+    If there was a failure that was not followed by event triggered, result will be False.`
+
+    
+
+
+Sequent close method
+--------------------
+
+    .. code-block:: python
+    
+        close()
+        
+when calling close method, Sequentor closes open artifacts.  In concept, this is similar to Pool's close method. 
+
+In simple example, **myflow.close()** engage Sequent's close() method.
+        
+Args
+````
+
+    N/A. 
 
 
 Recovery
@@ -346,7 +371,8 @@ Recovery Example
 
         # creating recovery flow
         myflow=build_flow(run_mode=sqnt.RunMode.recover, )
-        myflow()
+        myflow.run()
+        myflow.close()
     
 Example Output
 --------------

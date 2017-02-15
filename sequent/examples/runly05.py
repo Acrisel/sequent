@@ -74,5 +74,6 @@ def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fa
 
 myflow=build_flow(run_mode=sqnt.RunMode.recover, )
 #myflow=build_flow()
-result=myflow()
+result=myflow.run()
+myflow.close()
 print('run result: %s' % repr(result))

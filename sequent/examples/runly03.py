@@ -60,8 +60,10 @@ def build_flow(run_mode=evr.RunMode.restart, param=9):
 # start regularly; it would fail in step 2
 
 ev=build_flow(param=-9)
-ev()
+ev.run()
+ev.close()
 
 # rerun in recovery
 ev=build_flow(evr.RunMode.recover, param=9)
-ev()
+ev.run()
+ev.close()

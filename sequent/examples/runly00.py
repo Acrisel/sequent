@@ -23,12 +23,13 @@
 
 import sequent as seq
 import logging
+import time
 
 logger=logging.getLogger(__name__)
 
 def prog(flow, progname, success=True):
     logger.info("doing what %s is doing" % progname)
-    
+    time.sleep(1)
     if not success:
         raise Exception("%s failed" % progname)
     return progname
@@ -44,9 +45,10 @@ s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2'
                   requires=( (s111, seq.StepStatus.success), )) 
 
 s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
-                requires=( (s11, seq.StepStatus.success), ), delay=30) 
+                requires=( (s11, seq.StepStatus.success), )) 
 
 s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4'}, 
                    requires=( (s1, seq.StepStatus.success), )) 
 
-myflow()
+myflow.run()
+myflow.close()

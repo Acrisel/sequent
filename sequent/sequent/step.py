@@ -66,9 +66,9 @@ class Container(object):
             #sequence=parts[0]
             sequence=parts[0] if parts[0] else parts[2]
             if sequence:
-                todos=self.ev.count_todos_like("%s.%%" % (sequence)) 
+                todos, _=self.ev.count_todos_like("%s.%%" % (sequence)) 
             else:
-                todos=self.ev.count_todos() 
+                todos, _=self.ev.count_todos() 
             module_logger.debug("[ Step %s/%s ] TODOs count: %s" % (self.progname, sequence, todos))
         
         # for sequential: if it is finished, it can check if there is another item to to.

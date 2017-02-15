@@ -90,10 +90,13 @@ class Sequent(object):
         if self.evr:
             return self.evr.get_step_name()
     
-    def __call__(self, max_loops=-1):
+    def run(self, max_loops=-1):
         
         self.evr=eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
         self.root_step.create_flow(self.evr)
-        result=self.evr(max_loops=max_loops)
+        result=self.evr.run(max_loops=max_loops)
         return result
+    
+    def close(self):
+        self.evr.close()
         
