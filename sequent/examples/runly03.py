@@ -45,7 +45,7 @@ def divide(x,y):
 def build_flow(run_mode=evr.RunMode.restart, param=9):
     myflow=seq.Sequent(logging_level=logging.INFO, run_mode=run_mode, config={'sleep_between_loops': 0.05,})
     
-    s0=myflow.add_step('s0', repeats=[1,2])
+    s0=myflow.add_step('s0', repeats=[1,2], ) # host='192.168.1.100')
     
     s1=s0.add_step('s1', func=square, kwargs={'x': 3}, ) 
     

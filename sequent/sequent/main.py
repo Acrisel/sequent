@@ -36,14 +36,11 @@ class Sequent(object):
         """initializes step object            
         """
         
-        self.args=args
-        self.kwargs=kwargs
-        #self.repeat=repeat
-        #super().__init__(name=name, args=args, kwargs=kwargs)
-        self.root_step=Step(name=name,)
-        calling_module=eventor.calling_module()
-        self.store=store if store else eventor.store_from_module(calling_module)
-        #self.__steps=self.steps
+        self.args = args
+        self.kwargs = kwargs
+        self.root_step = Step(name=name,)
+        calling_module = eventor.calling_module()
+        self.store = store if store else eventor.store_from_module(calling_module)
                 
     def __repr__(self):
         return Step.__repr__(self)
@@ -75,11 +72,11 @@ class Sequent(object):
             
         """
         
-        step=self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, requires=requires, delay=delay, acquires=acquires, releases=releases, config=config, recovery=recovery, repeats=repeats)
+        step = self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, requires=requires, delay=delay, acquires=acquires, releases=releases, config=config, recovery=recovery, repeats=repeats)
         return step
     
     def add_event(self, requires):
-        event=self.root_step.add_event(requires)
+        event = self.root_step.add_event(requires)
         return event
     
     def get_step_sequence(self):
@@ -92,9 +89,9 @@ class Sequent(object):
     
     def run(self, max_loops=-1):
         
-        self.evr=eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
+        self.evr = eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
         self.root_step.create_flow(self.evr)
-        result=self.evr.run(max_loops=max_loops)
+        result = self.evr.run(max_loops=max_loops)
         return result
     
     def close(self):

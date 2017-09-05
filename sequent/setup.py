@@ -19,7 +19,7 @@ To create package and upload:
 
   python setup.py register
   python setup.py sdist
-  python setup.py sdist upload
+  twine upload -s dist/path/to/gz
 
 '''
 PACKAGE = "sequent"
@@ -86,7 +86,7 @@ setup_info={'name': NAME,
  'keywords': 'framework workflow flow program dependency dependencies procedural procedure sequential recovery restart',
  'packages': [PACKAGE],
  'install_requires': [
-     'eventor>=4.0.2',
+     'eventor>=5.1.0',
      ],
  'extras_require': {'dev': [], 'test': []},
  'classifiers': ['Development Status :: 5 - Production/Stable',

@@ -98,6 +98,19 @@ Example Output
 Code Highlights
 ---------------
 
+    Flow diagram:
+    
+    .. code-block:: python
+    
+         
+        +--S1----------------------+
+        |                          |
+        | +--S11----------+        |
+        | |               |        |
+        | | S111  -> S112 | -> S12 | -> S2
+        | +---------------+        |
+        +--------------------------+
+
     For simplicity, code definition of prog (line 6) serves as reusable activity for all the steps in this example.
     
     A *Sequent* object is defined (line 12) to host myflow.  By default, Sequent's Eventor loops on events and steps.  By defaults it sleeps one second between loops.  Here '*sleep_between_loops*' changes this setting to 0.05 seconds. 
