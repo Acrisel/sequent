@@ -30,22 +30,44 @@ module_logger=logging.getLogger(__name__)
 
 module_logger.setLevel(logging.DEBUG)
 
+import socket
+def get_ip_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    address = s.getsockname()[0]
+    s.close()
+    return address
+
+
+def get_hostname(full=False):
+    ip = get_ip_address()
+    if full == False:
+        try:
+            name = socket.gethostbyaddr(ip)[0]
+        except:
+            name = ip
+    else:
+        name = socket.getfqdn(ip)
+    return name
+
+
 class Sequent(object):
     
-    def __init__(self, name='', store='', *args, **kwargs):
+    def __init__(self, name='', store='', host='', *args, **kwargs):
         """initializes step object            
         """
         
         self.args = args
         self.kwargs = kwargs
-        self.root_step = Step(name=name,)
+        self.host = host if host else get_hostname()
+        self.root_step = Step(name=name, hosts=[host])
         calling_module = eventor.calling_module()
         self.store = store if store else eventor.store_from_module(calling_module)
-                
+        
     def __repr__(self):
-        return Step.__repr__(self)
+        return Step.__repr__(self.root_step)
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=(), delay=0, acquires=[], releases=None, config={}, recovery=None, repeats=[1,]):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=(), delay=0, acquires=[], releases=None, config={}, recovery=None, repeats=[1,], hosts=None, import_module=None, import_file=None):
         """add a step to steps object
         
         Args:
@@ -72,7 +94,7 @@ class Sequent(object):
             
         """
         
-        step = self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, requires=requires, delay=delay, acquires=acquires, releases=releases, config=config, recovery=recovery, repeats=repeats)
+        step = self.root_step.add_step(name=name, func=func, args=args, kwargs=kwargs, requires=requires, delay=delay, acquires=acquires, releases=releases, config=config, recovery=recovery, repeats=repeats, hosts=hosts, import_file=import_file, import_module=import_module)
         return step
     
     def add_event(self, requires):

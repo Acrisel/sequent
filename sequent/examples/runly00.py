@@ -35,21 +35,23 @@ def prog(flow, progname, success=True):
         raise Exception("%s failed" % progname)
     return progname
 
-config = os.path.abspath('example00.conf')
-myflow=seq.Sequent(logging_level=logging.DEBUG, config=config, store='pgdb2', eventor_config_tag='SEQUENT')
+config_file = os.path.abspath('example00.conf')
+#conf = os.path.join(os.path.dirname(__file__), config_file)
+myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=True, store='sqfile00', eventor_config_tag='SEQUENT')
+#myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, store='pgdb2', eventor_config_tag='SEQUENT')
 
-s1=myflow.add_step('s1', repeats=range(2) )
+s1 = myflow.add_step('s1', repeats=range(2) )
 
-s11=s1.add_step('s11', repeats=[1,2,])
+s11 = s1.add_step('s11', repeats=[1,2,])
 
-s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}) 
-s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, 
+s111 = s1.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}) 
+s112 = s1.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, 
                   requires=( (s111, seq.StepStatus.success), )) 
 
-s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
+s12 = s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
                 requires=( (s11, seq.StepStatus.success), )) 
 
-s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4'}, 
+s2 = myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4'}, 
                    requires=( (s1, seq.StepStatus.success), )) 
 
 myflow.run()

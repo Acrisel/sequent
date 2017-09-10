@@ -43,13 +43,13 @@ def divide(x,y):
     return z
 
 def build_flow(run_mode=evr.RunMode.restart, param=9):
-    myflow=seq.Sequent(logging_level=logging.INFO, run_mode=run_mode, config={'sleep_between_loops': 0.05,})
+    myflow=seq.Sequent(logging_level=logging.DEBUG, run_mode=run_mode, config={'sleep_between_loops': 0.05,})
     
-    s0=myflow.add_step('s0', repeats=[1,2], ) # host='192.168.1.100')
+    s0 = myflow.add_step('s0', repeats=[1], ) 
     
-    s1=s0.add_step('s1', func=square, kwargs={'x': 3}, ) 
+    s1 = s0.add_step('s1', func=square, kwargs={'x': 3}, ) 
     
-    s2=s0.add_step('s2', square_root, kwargs={'x': param}, requires=[(s1,seq.StepStatus.success), ],
+    s2 = s0.add_step('s2', square_root, kwargs={'x': param}, requires=[(s1,seq.StepStatus.success), ],
                    recovery={evr.TaskStatus.failure: evr.StepReplay.rerun, 
                              evr.TaskStatus.success: evr.StepReplay.skip})
     
