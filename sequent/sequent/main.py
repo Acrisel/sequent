@@ -23,8 +23,8 @@
 import eventor
 import logging 
 
-from .step import Step
-from .sequent_types import RunMode
+from sequent.step import Step
+#from .sequent_types import RunMode
 
 module_logger=logging.getLogger(__name__)
 
@@ -33,8 +33,12 @@ module_logger.setLevel(logging.DEBUG)
 import socket
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    address = s.getsockname()[0]
+    try:
+        s.connect(("8.8.8.8", 80))
+    except OSError:
+        address = 'localhost'
+    else:
+        address = s.getsockname()[0]
     s.close()
     return address
 
@@ -109,12 +113,18 @@ class Sequent(object):
         if self.evr:
             return self.evr.get_step_name()
     
-    def run(self, max_loops=-1):
+    def run(self, max_loops=-1, ):
         
         self.evr = eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
         self.root_step.create_flow(self.evr)
         result = self.evr.run(max_loops=max_loops)
         return result
+        
+    def program_repr(self):
+        self.evr = eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
+        self.root_step.create_flow(self.evr)
+        return self.evr.program_repr()
+       
     
     def close(self):
         self.evr.close()

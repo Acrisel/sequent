@@ -4,7 +4,7 @@ Created on Oct 31, 2016
 @author: arnon
 '''
 
-from .sequent_types import SequentError
+#from .sequent_types import SequentError
 import logging
 from acris import Sequence
 
