@@ -15,5 +15,5 @@ class Event(object):
     event_sequence=Sequence('SequentEvent')
     
     def __init__(self, require ):
-        self.require=require
-        self.id=Event.event_sequence()
+        self.require = require
+        self.id = Event.event_sequence()

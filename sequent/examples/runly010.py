@@ -23,6 +23,7 @@
 
 import sequent as seq
 import logging
+import os
 
 logger=logging.getLogger(__name__)
 
@@ -32,20 +33,23 @@ def prog(progname, success=True):
         raise Exception("%s failed" % progname)
     return progname
 
-myflow=seq.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,})
+config_file = os.path.abspath('example00.conf')
+#conf = os.path.join(os.path.dirname(__file__), config_file)
+#myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
+myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
 
-s=myflow.add_step('s0', repeats=[1,2,])
+s = myflow.add_step('s0', repeats=[1,2,])
 
-s1=s.add_step('s1', repeats=[1,2,])
-s11=s1.add_step('s11', func=prog, kwargs={'progname': 'prog11'}) 
-s12=s1.add_step('s12', func=prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
+s1 = s.add_step('s1', repeats=[1,2,])
+s11 = s1.add_step('s11', func=prog, kwargs={'progname': 'prog11'}) 
+s12 = s1.add_step('s12', func=prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
 
-s2=s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
-s21=s2.add_step('s21', func=prog, kwargs={'progname': 'prog21'})
-s22=s2.add_step('s22', func=prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.StepStatus.complete ), ))
+s2 = s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
+s21 = s2.add_step('s21', func=prog, kwargs={'progname': 'prog21'})
+s22 = s2.add_step('s22', func=prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.StepStatus.complete ), ))
 
-e1=s.add_event( ( (s1, seq.StepStatus.complete), (s2, seq.StepStatus.complete), ) )
-s3=s.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, requires=(e1,))
+e1 = s.add_event( ( (s1, seq.StepStatus.complete), (s2, seq.StepStatus.complete), ) )
+s3 = s.add_step('s3', func=prog, kwargs={'progname': 'prog3'}, requires=(e1,))
 
 myflow.run()
 myflow.close()

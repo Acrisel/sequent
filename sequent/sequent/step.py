@@ -174,16 +174,52 @@ class Step(object):
         self.__events = list()
         self.__container = None
         
+        '''
+                if len(arg) == 0:
+                    result=''
+                #elif len(arg) == 1:
+                #    result= self.expr_to_str(*arg)
+                elif arg[0] == LogocalOp.or_:
+                    result = self.or_(evr, *arg[1:])
+                elif len(arg) == 2 and isinstance(arg[0], Step):
+                    self.__add_all_requires(arg)
+                    result = self.get_require_step_event(evr, arg[0], arg[1])
+                    # add to steps that are NOT enders
+                    self.ender_steps[arg[0].path]=arg[0]
+                else:    
+                    result= "(" + self.expr_to_str(*arg) +")" 
+
+        '''
+        
     def __add_all_requires(self, require):
         if isinstance(require, tuple):
-            req_step, state = require
-            req_list = self.root_step.__all_requires.get(req_step.path, list())
-            self.root_step.__all_requires[req_step.path] = req_list
-            if state != StepStatus.complete:
-                req_list.append(state)
+            if len(require) == 0: return
+            elif require[0] == LogocalOp.or_:
+                for r in require[1:]:
+                    self.__add_all_requires(r)
+                return
+            elif len(require) == 2 and isinstance(require[0], Step):
+                req_step, state = require
+                req_list = self.root_step.__all_requires.get(req_step.path, list())
+                self.root_step.__all_requires[req_step.path] = req_list
+                if state != StepStatus.complete:
+                    req_list.append(state)
+                else:
+                    req_list.extend([StepStatus.success, StepStatus.failure])
+                req_list = list(set(req_list))
             else:
-                req_list.extend([StepStatus.success, StepStatus.failure])
-            req_list = list(set(req_list))
+                for r in require:
+                    self.__add_all_requires(r)
+                #msg = "[ Step %s ] Bad require tuple: %s." % (self.path, str(require)) 
+                #module_logger.debug(msg)
+                #raise SequentError(msg)
+        elif  isinstance(require, Event):
+            self.__add_all_requires(require.require)
+        else:
+            msg = "[ Step %s ] Bad require: %s." % (self.path, str(require)) 
+            module_logger.debug(msg)
+            raise SequentError(msg )
+        
         
     def __repr__(self):
         return "Step( path(%s), step(%s),)" % (self.path, self.__steps)
@@ -293,6 +329,7 @@ class Step(object):
         #require=step.require
         items = list()
         for arg in require:
+            module_logger.debug("Convert requires: %s(%s)." % (type(arg).__name__, arg))
             if type(arg) == str:
                 result = arg
             elif isinstance(arg, Event):
@@ -310,9 +347,10 @@ class Step(object):
                     # add to steps that are NOT enders
                     self.ender_steps[arg[0].path]=arg[0]
                 else:    
-                    result= "(" + self.expr_to_str(*arg) +")" 
+                    list_expr = [self.convert_require(a) for a in arg]
+                    result = "(" + ") and (".join(list_expr) +")" 
             else:
-                raise SequentError("unknown variable in require: %s" % repr(arg))
+                raise SequentError("Unknown variable in require: %s" % repr(arg))
             items.append(result)
                 
         expr = "(" + ") and (".join(items) + ")"
@@ -359,14 +397,16 @@ class Step(object):
             # Add success and failure events
             step.triggers = dict()
             statuses = [StepStatus.success, StepStatus.failure] 
-            all_requires = self.root_step.__all_requires.get(step.path, [])               
+            all_requires = self.root_step.__all_requires.get(step.path, [])     
+            module_logger.debug("[ Step %s ] all_required: %s" % (self.path, repr(all_requires)))          
             for status in statuses:
-                if status not in all_requires and step.parent is not None: continue
                 event_name = "%s_%s" % (step.path, status.name)
-                #print('event:', event_name)
                 event = evr.add_event(event_name)
-                step.triggers.update({status: (event,)})
                 events[event.id_] = event
+                if status in all_requires or step.parent is None: 
+                    #print('event:', event_name)
+                    step.triggers.update({status: (event,)})
+                
                 
             # add end event for container steps
             if step.is_container():
@@ -446,9 +486,9 @@ class Step(object):
                 self.__eventor_events[next_id] = next_event
                 #triggers = {StepStatus.complete: (next_event, ),}
                 #module_logger.debug("[ Step %s ] Add ender trigger: %s" % (step.path, triggers)) 
-                module_logger.debug("[ Step %s ] Add assoc to next step: %s" % (repr(next_event), repr(next_step))) 
+                module_logger.debug("[ Step %s ] Add assoc to next step: %s %s" % (step.path, repr(next_event), repr(next_step))) 
                 evr.add_assoc(next_event, next_step)
-                module_logger.debug("[ Step %s ] Add trigger to success: %s" % (repr(next_event), repr(next_step))) 
+                module_logger.debug("[ Step %s ] Add trigger to success: %s %s" % (step.path, repr(next_event), repr(next_step))) 
                 success_event_name = step.get_success_event_name()
                 success_event = self.__eventor_events[success_event_name]
                 triggers = {StepStatus.success: (success_event,),}
@@ -482,6 +522,7 @@ class Step(object):
                                       config={'task_construct': 'invoke', 'max_concurrent':1,}, triggers=enders)
                 #                      config={'task_construct': Invoke, 'max_concurrent':1,}, triggers=enders)
                 end_event = self.__eventor_events[step.get_end_event_name()]
+                module_logger.debug("[ Step %s ] Add end event assoc: %s %s" % (step.path, repr(end_event), repr(end_step)))
                 evr.add_assoc(end_event, end_step)
                 
                 #container=Container(ev=evr, step=step, progname=step.path, repeat=step.loop, iter_triggers=startes, end_triggers=enders)
