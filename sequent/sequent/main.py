@@ -26,7 +26,7 @@ import logging
 from sequent.step import Step
 #from .sequent_types import RunMode
 
-module_logger=logging.getLogger(__name__)
+module_logger = logging.getLogger(__name__)
 
 module_logger.setLevel(logging.DEBUG)
 
@@ -118,6 +118,7 @@ class Sequent(object):
         self.evr = eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
         self.root_step.create_flow(self.evr)
         result = self.evr.run(max_loops=max_loops)
+        self.evr.close()
         return result
         
     def program_repr(self):

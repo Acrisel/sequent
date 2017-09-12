@@ -28,12 +28,7 @@ import os
 
 logger=logging.getLogger(__name__)
 
-def prog(flow, progname, success=True):
-    logger.info("doing what %s is doing" % progname)
-    time.sleep(1)
-    if not success:
-        raise Exception("%s failed" % progname)
-    return progname
+import examples.run_progs as rprogs
 
 config_file = os.path.abspath('example00.conf')
 #conf = os.path.join(os.path.dirname(__file__), config_file)
@@ -44,15 +39,19 @@ s1 = myflow.add_step('s1', repeats=range(2) )
 
 #s11 = s1.add_step('s11', repeats=[1,])
 
-s11 = s1.add_step('s11', func=prog, kwargs={'flow': myflow, 'progname': 'prog11', 'success': True}, repeats=[1,]) 
-s12 = s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog12',}, repeats=[1,]) 
+s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11', 'success': True}, repeats=[1,]) 
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12',}, repeats=[1,]) 
 
-#s12 = s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
+#s12 = s1.add_step('s12', func=prog, kwargs={'progname': 'prog3'}, 
 #                requires=( (s11, seq.StepStatus.success), )) 
 
-s2 = myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog2'}, 
+s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog2'}, 
                    requires=( (s1, seq.StepStatus.success), )) 
 
-myflow.run()
-#program = myflow.program_repr(); print(program)
-myflow.close()
+if __name__ == '__main__':
+    import multiprocessing as mp
+    mp.freeze_support()
+    mp.set_start_method('spawn')
+    myflow.run()
+    #program = myflow.program_repr(); print(program)
+    myflow.close()
