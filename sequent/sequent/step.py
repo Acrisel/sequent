@@ -81,7 +81,7 @@ class Container(object):
         if initial:
             self.iter = Mediator(self.repeat())
             todos = 1
-            self.triggers = self.step.create_flow(eventor, trigger=False,)
+            #self.triggers = self.step.create_flow(eventor, trigger=False,)
             self.initiating_sequence = eventor_task_sequence #self.ev.get_task_sequence()
             self.loop_index = 0
             # eventor_task_sequence is parent sequence, take as is
@@ -121,7 +121,7 @@ class Container(object):
                 else:
                     sequence = ''
                 sequence = "{}{}".format(sequence, self.loop_index) 
-                for trigger in self.triggers:
+                for trigger in self.step.start_evensts:
                     module_logger.debug("[ Step {} ] Triggering starter {}/{}.".format(self.progname, repr(trigger), self.loop_index,))
                     eventor.remote_trigger_event(trigger, sequence,)
                 #for trigger in self.starters:
@@ -645,6 +645,9 @@ class Step(object):
                     module_logger.debug('[ Step %s ] Steps: %s' %(step.path, step.__steps))
                     step.__create_eventor_steps(evr)
                 '''
+                step.start_evensts = step.create_flow(evr, trigger=False,)
+                #step.start_evensts = step.__create_eventor_steps(evr,)  
+
         
         for parent, ender_events in step_ender_events.items():
             module_logger.debug("[ Step {} ] Adding ender expr to 'next' event: {}.".format(parent.path, repr(ender_events)))

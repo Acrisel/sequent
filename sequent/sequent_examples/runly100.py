@@ -28,7 +28,11 @@ from sequent_examples import run_progs as rprog
 
 logger = logging.getLogger(__name__)
 
-config = os.path.abspath('example00.conf')
+#config = os.path.abspath('example00.conf')
+config=os.path.abspath('example00.conf')
+# because OSX adds /var -> /private/var
+if config.startswith('/private'):
+    config = config[8:]
 myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, shared_db=False, store='pgdb2', eventor_config_tag='SEQUENT', )
 
 s1 = myflow.add_step('s1', repeats=[1,2] )

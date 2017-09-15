@@ -32,7 +32,7 @@ config_file = os.path.abspath('example00.conf')
 #conf = os.path.join(os.path.dirname(__file__), config_file)
 #myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
 myflow = seq.Sequent(logging_level=logging.INFO, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
-
+    
 s = myflow.add_step('s0', repeats=[1,2,])
 
 s1 = s.add_step('s1', repeats=[1,2,])
