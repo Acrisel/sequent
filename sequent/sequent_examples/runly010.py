@@ -27,7 +27,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
-import examples.run_progs as rprogs
+import sequent_examples.run_progs as rprogs
 config_file = os.path.abspath('example00.conf')
 #conf = os.path.join(os.path.dirname(__file__), config_file)
 #myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')

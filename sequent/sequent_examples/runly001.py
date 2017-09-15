@@ -24,7 +24,7 @@ import sequent as seq
 import logging
 import time
 import os
-import examples.run_progs as rprogs
+import sequent_examples.run_progs as rprogs
 
 logger=logging.getLogger(__name__)
 
