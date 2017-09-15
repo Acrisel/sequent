@@ -23,28 +23,35 @@
 
 import sequent as seq
 import logging
+import time
 import os
 
 logger=logging.getLogger(__name__)
 
 import examples.run_progs as rprogs
+
 config_file = os.path.abspath('example00.conf')
 #conf = os.path.join(os.path.dirname(__file__), config_file)
-#myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
 myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
+#myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, store='pgdb2', eventor_config_tag='SEQUENT')
 
-s = myflow.add_step('s0', repeats=[1,2,])
+s1 = myflow.add_step('s1', repeats=[1,2] )
 
-s1 = s.add_step('s1', repeats=[1,2,])
-s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}) 
-s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
+#s11 = s1.add_step('s11', repeats=[1,])
 
-s2 = s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
-s21 = s2.add_step('s21', func=rprogs.prog, kwargs={'progname': 'prog21'})
-s22 = s2.add_step('s22', func=rprogs.prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.StepStatus.complete ), ))
+s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11', 'success': True}, repeats=[1,]) 
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12',}, repeats=[1,]) 
 
-e1 = s.add_event( ( (s1, seq.StepStatus.complete), (s2, seq.StepStatus.complete), ) )
-s3 = s.add_step('s3', func=rprogs.prog, kwargs={'progname': 'prog3'}, requires=(e1,))
+#s12 = s1.add_step('s12', func=prog, kwargs={'progname': 'prog3'}, 
+#                requires=( (s11, seq.StepStatus.success), )) 
 
-myflow.run()
-myflow.close()
+s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog2'}, 
+                   requires=( (s1, seq.StepStatus.success), )) 
+
+if __name__ == '__main__':
+    import multiprocessing as mp
+    mp.freeze_support()
+    mp.set_start_method('spawn')
+    myflow.run()
+    #program = myflow.program_repr(); print(program)
+    myflow.close()

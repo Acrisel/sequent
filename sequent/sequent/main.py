@@ -22,6 +22,7 @@
 
 import eventor
 import logging 
+import os
 
 from sequent.step import Step
 #from .sequent_types import RunMode
@@ -30,43 +31,21 @@ module_logger = logging.getLogger(__name__)
 
 module_logger.setLevel(logging.DEBUG)
 
-import socket
-def get_ip_address():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-    except OSError:
-        address = 'localhost'
-    else:
-        address = s.getsockname()[0]
-    s.close()
-    return address
-
-
-def get_hostname(full=False):
-    ip = get_ip_address()
-    if full == False:
-        try:
-            name = socket.gethostbyaddr(ip)[0]
-        except:
-            name = ip
-    else:
-        name = socket.getfqdn(ip)
-    return name
-
 
 class Sequent(object):
     
-    def __init__(self, name='', store='', host='', *args, **kwargs):
+    def __init__(self, name='', store='', *args, **kwargs):
         """initializes step object            
         """
         
         self.args = args
         self.kwargs = kwargs
-        self.host = host if host else get_hostname()
-        self.root_step = Step(name=name, hosts=[host])
+        #self.host = host if host else get_hostname()
+        self.root_step = Step(name=name,)
         calling_module = eventor.calling_module()
         self.store = store if store else eventor.store_from_module(calling_module)
+        self.__remotes = []
+        self.name = name if name else os.path.basename(eventor.calling_module())
         
     def __repr__(self):
         return Step.__repr__(self.root_step)
@@ -115,14 +94,14 @@ class Sequent(object):
     
     def run(self, max_loops=-1, ):
         
-        self.evr = eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
+        self.evr = eventor.Eventor(*self.args, name=self.name, store=self.store, **self.kwargs)
         self.root_step.create_flow(self.evr)
         result = self.evr.run(max_loops=max_loops)
         self.evr.close()
         return result
         
     def program_repr(self):
-        self.evr = eventor.Eventor(*self.args, name=self.root_step.path, store=self.store, **self.kwargs)
+        self.evr = eventor.Eventor(*self.args, name=self.name, store=self.store, **self.kwargs)
         self.root_step.create_flow(self.evr)
         return self.evr.program_repr()
        
