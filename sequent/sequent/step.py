@@ -77,7 +77,7 @@ class Container(object):
         self.__name__ = 'Container'
             
         
-    def __call__(self, initial=False, eventor_task_sequence='', eventor=None): 
+    def __call__(self, initial=False, eventor_task_sequence='', eventor=None, logger=None): 
         if initial:
             self.iter = Mediator(self.repeat())
             todos = 1
@@ -86,7 +86,7 @@ class Container(object):
             self.loop_index = 0
             # eventor_task_sequence is parent sequence, take as is
             sequence = eventor_task_sequence
-            module_logger.debug("[ Step {} ] Setting sequence: {}.".format(self.progname, sequence, ))
+            logger.debug("[ Step {} ] Setting sequence: {}.".format(self.progname, sequence, ))
         else:
             # this is child sequence - convert to parent
             sequence = str(eventor_task_sequence)
@@ -97,20 +97,20 @@ class Container(object):
                 todos, _ = eventor.count_todos_like("{}.%".format(sequence)) 
             else:
                 todos, _ = eventor.count_todos() 
-            module_logger.debug("[ Step {}/{} ] TODOs count {}: {}.".format(self.progname, sequence, repr(sequence), todos))
+            logger.debug("[ Step {}/{} ] TODOs count {}: {}.".format(self.progname, sequence, repr(sequence), todos))
         
         # for sequential: if it is finished, it can check if there is another item to to.
         # TODO: for concurrent, need to check if max concurrent reached.  If not, activated another.
         # TODO: if resources are required, before starting, need to grab resource. 
         if todos <2 or initial:    
-            module_logger.debug("[ Step {}/{} ] Trying to get next sequence.".format(self.progname, eventor_task_sequence)) 
+            logger.debug("[ Step {}/{} ] Trying to get next sequence.".format(self.progname, eventor_task_sequence)) 
             try:
                 item = next(self.iter)
             except StopIteration :
-                module_logger.debug("[ Step {} ] Received StopIteration ({}).".format(self.progname, self.loop_index,))
+                logger.debug("[ Step {} ] Received StopIteration ({}).".format(self.progname, self.loop_index,))
                 item = None
             else:
-                module_logger.debug("[ Step {} ] Received NextIteration: {} ({}).".format(self.progname, repr(item), self.loop_index,))    
+                logger.debug("[ Step {} ] Received NextIteration: {} ({}).".format(self.progname, repr(item), self.loop_index,))    
                 
             if item is not None:
                 # TODO - values need to specific to  task sequence
@@ -122,19 +122,19 @@ class Container(object):
                     sequence = ''
                 sequence = "{}{}".format(sequence, self.loop_index) 
                 for trigger in self.step.start_evensts:
-                    module_logger.debug("[ Step {} ] Triggering starter {}/{}.".format(self.progname, repr(trigger), self.loop_index,))
+                    logger.debug("[ Step {} ] Triggering starter {}/{}.".format(self.progname, repr(trigger), self.loop_index,))
                     eventor.remote_trigger_event(trigger, sequence,)
                 #for trigger in self.starters:
                 #    module_logger.debug("[ Step %s ] triggering starter: %s" % (self.progname, repr(trigger),))
                 #    self.ev.remote_trigger_event(trigger, self.loop_index,)
             else:
-                module_logger.debug("[ Step {} ] Enders: {}.".format(self.progname, list(self.step.ender_steps.keys()),))
+                logger.debug("[ Step {} ] Enders: {}.".format(self.progname, list(self.step.ender_steps.keys()),))
                 enders_status = eventor.get_task_status(self.step.ender_steps.keys(), self.loop_index)
                 status = evaluate_status(enders_status)
                 #self.ev.update_task()
-                module_logger.debug("[ Step {} ] Container step status for triggering: {}".format(self.progname, status.name,))
+                logger.debug("[ Step {} ] Container step status for triggering: {}".format(self.progname, status.name,))
                 for trigger in self.enders[status]:
-                    module_logger.debug("[ Step {} ] Triggering ender: {}".format(self.progname, repr(trigger),))
+                    logger.debug("[ Step {} ] Triggering ender: {}".format(self.progname, repr(trigger),))
                     eventor.remote_trigger_event(trigger, self.initiating_sequence,)
             
         return True
@@ -579,7 +579,7 @@ class Step(object):
                 #next_id="%s_%s"% (parent.get_next_event_name(), parent.__sequence_next_step())
                 next_id = parent.get_next_event_name()
                 next_step = evr.add_step(next_id, func=container, kwargs={'initial': False,}, recovery=container_recovery, 
-                                       config={'task_construct': 'invoke', 'max_concurrent':1, 'sequence_arg_name':'eventor_task_sequence',})
+                                       config={'task_construct': 'invoke', 'max_concurrent':1, 'sequence_arg_name':'eventor_task_sequence', 'pass_logger_to_task': True})
                 steps[next_step.path] = next_step
                 next_event = evr.add_event(next_id)
                 self.__eventor_events[next_id] = next_event
@@ -620,7 +620,7 @@ class Step(object):
                     
                 # create end step
                 end_step = evr.add_step(step.get_end_event_name(), recovery=container_recovery, releases=step.releases,
-                                      config={'task_construct': 'invoke', 'max_concurrent':1,}, triggers=enders)
+                                      config={'task_construct': 'invoke', 'max_concurrent':1, 'pass_logger_to_task': True}, triggers=enders)
                 #                      config={'task_construct': Invoke, 'max_concurrent':1,}, triggers=enders)
                 end_event = self.__eventor_events[step.get_end_event_name()]
                 module_logger.debug("[ Step {} ] Add end event assoc: {} {}.".format(step.path, repr(end_event), repr(end_step)))
@@ -634,7 +634,7 @@ class Step(object):
                 # create first step and event
 
                 first_step = evr.add_step(step.get_start_event_name(), func=container, kwargs={'initial': True,}, recovery=container_recovery,
-                                        acquires=step.acquires, config={'task_construct': 'invoke', 'max_concurrent':1, 'sequence_arg_name': 'eventor_task_sequence',})
+                                        acquires=step.acquires, config={'task_construct': 'invoke', 'max_concurrent':1, 'sequence_arg_name': 'eventor_task_sequence', 'pass_logger_to_task': True})
                 steps[first_step.path] = first_step
                 start_event = self.__eventor_events[step.get_start_event_name()]
                 evr.add_assoc(start_event, first_step, delay=step.delay)
