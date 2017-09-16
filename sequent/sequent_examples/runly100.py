@@ -24,7 +24,7 @@
 import sequent as seq
 import logging
 import os
-from sequent_examples import run_progs as rprog
+from sequent_examples import run_progs as rprogs
 
 logger = logging.getLogger(__name__)
 
@@ -33,21 +33,38 @@ config=os.path.abspath('example00.conf')
 # because OSX adds /var -> /private/var
 if config.startswith('/private'):
     config = config[8:]
+
+
 myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, shared_db=False, store='pgdb2', eventor_config_tag='SEQUENT', )
 
+'''
 s1 = myflow.add_step('s1', repeats=[1,2] )
 
 s11 = s1.add_step('s11', repeats=[1,2,])
 
-s111 = s11.add_step('s111', func=rprog.prog, kwargs={'progname': 'prog1'}, hosts=['ubuntud01_sequent']) 
-s112 = s11.add_step('s112', func=rprog.prog, kwargs={'progname': 'prog2',}, 
+s111 = s11.add_step('s111', func=rprogs.prog, kwargs={'progname': 'prog1'}, hosts=['ubuntud01_sequent']) 
+s112 = s11.add_step('s112', func=rprogs.prog, kwargs={'progname': 'prog2',}, 
                   requires=( (s111, seq.StepStatus.success), )) 
 
-s12 = s1.add_step('s12', func=rprog.prog, kwargs={'progname': 'prog3'}, 
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog3'}, 
                 requires=( (s11, seq.StepStatus.success), )) 
 
-s2 = myflow.add_step('s2', func=rprog.prog, kwargs={'progname': 'prog4'}, 
+s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog4'}, 
                    requires=( (s1, seq.StepStatus.success), )) 
+'''
+s = myflow.add_step('s0', repeats=[1,2,])
+
+s1 = s.add_step('s1', repeats=[1,2,])
+s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}) 
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
+
+s2 = s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
+s21 = s2.add_step('s21', func=rprogs.prog, kwargs={'progname': 'prog21'})
+s22 = s2.add_step('s22', func=rprogs.prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.StepStatus.complete ), ))
+
+e1 = s.add_event( ( (s1, seq.StepStatus.complete), (s2, seq.StepStatus.complete), ) )
+s3 = s.add_step('s3', func=rprogs.prog, kwargs={'progname': 'prog3'}, requires=(e1,))
+
 
 if __name__ == '__main__':
     import multiprocessing as mp
