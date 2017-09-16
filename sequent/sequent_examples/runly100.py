@@ -55,7 +55,7 @@ s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog4'},
 s = myflow.add_step('s0', repeats=[1,2,])
 
 s1 = s.add_step('s1', repeats=[1,2,])
-s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}) 
+s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}, hosts=['ubuntud01_sequent']) 
 s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
 
 s2 = s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
