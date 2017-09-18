@@ -18,9 +18,9 @@ Overview
     
     *Sequent* can be used to create the flow where A1, A2 would run concurrently, then program B would run.  When B is successful, programs C1 and C2 would run.
     
-    *Sequent* uses *Eventor* (https://github.com/Acrisel/eventor) as its underline infrastructure.  With that, it gains *Eventor*'s recovery capabilities.  When running in recovery, successful steps can be skipped.
+    *Sequent* uses *Eventor* (https://github.com/Acrisel/eventor) as its underline infrastructure. With that, it gains *Eventor*'s recovery capabilities.  When running in recovery, successful steps can be skipped.
     
-    Considering the above example, this can be useful when C2 transmission program fails.  Recovery run would only execute it with out redoing potentially expensive work that was already completed (A1, A2, B, and C1)
+    Considering the above example, this can be useful when C2 transmission program fails. Recovery run would only execute it with out redoing potentially expensive work that was already completed (A1, A2, B, and C1)
     
     It would be easier to show an example. In this example, *Step s2* would run after *Step s1* would loop twice. When they are done, *Step s3* will run.  This flow would be repeat twice.
 
@@ -36,35 +36,34 @@ Simple Example
         logger=logging.getLogger(__name__)
 
         def prog(progname, success=True):
-            logger.info("doing what %s is doing" % progname)
+            logger.info("doing what {} is doing".format(progname))
             if not success:
-                raise Exception("%s failed" % progname)
+                raise Exception("{} failed".format(progname))
             return progname
 
-        myflow=seq.Sequent(logging_level=logging.INFO, 
+        myflow = seq.Sequent(logging_level=logging.INFO, 
                            config={'sleep_between_loops': 0.05,})
 
-        s1=myflow.add_step('s1', repeats=[1,2])
+        s1 = myflow.add_step('s1', repeats=[1,2])
 
-        s11=s1.add_step('s11', repeats=[1,2,])
+        s11 = s1.add_step('s11', repeats=[1,2,])
 
-        s111=s11.add_step('s111', func=prog, kwargs={'progname': 'prog1'}) 
-        s112=s11.add_step('s112', func=prog, kwargs={'progname': 'prog2'}, 
+        s111 = s11.add_step('s111', func=prog, kwargs={'progname': 'prog1'}) 
+        s112 = s11.add_step('s112', func=prog, kwargs={'progname': 'prog2'}, 
                           requires=( (s111, seq.StepStatus.success), )) 
 
-        s12=s1.add_step('s12', func=prog, kwargs={'progname': 'prog3'}, 
+        s12 = s1.add_step('s12', func=prog, kwargs={'progname': 'prog3'}, 
                         require=s( (s11, seq.StepStatus.success), )) 
 
-        s2=myflow.add_step('s2', func=prog, kwargs={'progname': 'prog4'}, 
-                           requires=( (s1, seq.StepStatus.success), )) 
+        s2 = myflow.add_step('s2', func=prog, kwargs={'progname': 'prog4'}, 
+                           requires=((s1, seq.StepStatus.success),)) 
 
         myflow.run() 
-        myflow.close()
            
 Example Output
 --------------
 
-    The above example with provide the following log output.  Note more detailed logging activities was stripped off.  Only actual shows actual program activity is shown.
+    The above example with provide the following log output. Note more detailed logging activities was stripped off.  Only actual shows actual program activity is shown.
     
     .. code-block:: python
         :number-lines:
@@ -113,9 +112,9 @@ Code Highlights
 
     For simplicity, code definition of prog (line 6) serves as reusable activity for all the steps in this example.
     
-    A *Sequent* object is defined (line 12) to host myflow.  By default, Sequent's Eventor loops on events and steps.  By defaults it sleeps one second between loops.  Here '*sleep_between_loops*' changes this setting to 0.05 seconds. 
+    A *Sequent* object is defined (line 12) to host myflow. By default, Sequent's Eventor loops on events and steps.  By defaults it sleeps one second between loops. Here '*sleep_between_loops*' changes this setting to 0.05 seconds. 
     
-    myflow contains two steps, *s1* and *s2*.  *s1* is a container step that would repeat twice (defined on line 15). *s2* is a processing step (defined on line 26).
+    myflow contains two steps, *s1* and *s2*. *s1* is a container step that would repeat twice (defined on line 15). *s2* is a processing step (defined on line 26).
     
     *s1* contains two steps. *s11* (line 17) is *container* step and *s12* is a processing step.  
     
@@ -123,28 +122,27 @@ Code Highlights
     
     Finally, on line 29 the flow is executed using *myflow()*.
  
-
 Sequent Interface
 =================
 
 Sequent Class Initiator
 -----------------------
 
-    .. code::
+    .. code-block:: python
         
         Sequent(name='', store='', run_mode=RunMode.restart, recovery_run=None, logging_level=logging.INFO, config={})
 
 Description
 ```````````
 
-    Sequent, when instantiated, provides interface to build program flow.  When called upon, *Sequent* steps are translated to *Eventor* steps and *Step*'s *requires* are translated to *Eventor*'s *Events* and *Steps'* *triggers*.
+    Sequent, when instantiated, provides interface to build program flow. When called upon, *Sequent* steps are translated to *Eventor* steps and *Step*'s *requires* are translated to *Eventor*'s *Events* and *Steps'* *triggers*.
     
     Sequent instantiation arguments are the same as *Eventor*'s.  
 
 Args
 ````
 
-    name: string id for Sequent object initiated
+    name: string id for Sequent object initiated.
     
     store: path to file that would store runnable (sqlite) information; if ':memory:' is used, in-memory temporary 
         storage will be created.  If not provided, calling module path and name will be used 
@@ -156,34 +154,34 @@ Args
     recovery_run: if *RunMode.recover* is used, *recovery_run* will indicate specific instance of previously recovery 
         run that would be executed.If not provided, latest run would be used.
           
-    config: keyword dictionary of default configurations.  Available keywords and their default values:
+    config: keyword dictionary of default configurations. Available keywords and their default values:
     
-        +---------------------+------------+--------------------------------------------------+
-        | Name                | Default    | Description                                      |
-        |                     | Value      |                                                  |
-        +=====================+============+==================================================+
-        | workdir             | /tmp       | place to create necessry artifacts (not in use)  |
-        +---------------------+------------+--------------------------------------------------+
-        | logdir              | /tmp       | place to create debug and error log files        |
-        +---------------------+------------+--------------------------------------------------+
-        | task_construct      | mp.Process | method to use for execution of steps             |
-        +---------------------+------------+--------------------------------------------------+
-        | max_concurrent      | 1          | maximum concurrent processing, if value <1, no   |
-        |                     |            | limit will be pose                               |
-        +---------------------+------------+--------------------------------------------------+
-        | stop_on_exception   | True       | if an exception occurs in a step, stop           |
-        |                     |            | all processes.  If True, new processes will not  |
-        |                     |            | start.  But running processes will be permitted  |
-        |                     |            | to finish                                        |
-        +---------------------+------------+--------------------------------------------------+
-        | sleep_between_loops | 1          | seconds to sleep between iteration of checking   |
-        |                     |            | triggers and tasks                               |
-        +---------------------+------------+--------------------------------------------------+
+        +---------------------+------------------+--------------------------------------------------+
+        | Name                | Default          | Description                                      |
+        |                     | Value            |                                                  |
+        +=====================+==================+==================================================+
+        | workdir             | /tmp             | place to create necessry artifacts (not in use)  |
+        +---------------------+------------------+--------------------------------------------------+
+        | logdir              | /var/log/eventor | place to create debug and error log files        |
+        +---------------------+------------------+--------------------------------------------------+
+        | task_construct      | 'process'        | method to use for execution of steps             |
+        +---------------------+------------------+--------------------------------------------------+
+        | max_concurrent      | 1                | maximum concurrent processing, if value <1, no   |
+        |                     |                  | limit will be pose                               |
+        +---------------------+------------------+--------------------------------------------------+
+        | stop_on_exception   | True             | if an exception occurs in a step, stop           |
+        |                     |                  | all processes.  If True, new processes will not  |
+        |                     |                  | start.  But running processes will be permitted  |
+        |                     |                  | to finish                                        |
+        +---------------------+------------------+--------------------------------------------------+
+        | sleep_between_loops | 1                | seconds to sleep between iteration of checking   |
+        |                     |                  | triggers and tasks                               |
+        +---------------------+------------------+--------------------------------------------------+
           
 Sequent add_event method
 ------------------------
 
-    .. code::
+    .. code-block:: python
         
         add_event(require=None)
 
@@ -193,7 +191,7 @@ Args
     *requires*: logical expression 'sqlalchemy' style to automatically raise this expresion.
         syntax: 
         
-        .. code ::
+        .. code-block:: python
             
             requires : (requires, requires, ...)
                      | or_(requires, requires, ...) 
@@ -211,9 +209,9 @@ Returns
 Sequent add_step method
 -----------------------
 
-    .. code::
+    .. code-block:: python
         
-        add_step(name, func, args=(), kwargs={}, requires={}, delay=0, acquires=[], releases=None, recovery={}, config={})
+        add_step(name, func, args=(), kwargs={}, hosts=[], requires={}, delay=0, acquires=[], releases=None, recovery={}, config={})
 
 Args
 ````
@@ -225,6 +223,9 @@ Args
     *args*: tuple of values that will be passed to *func* at calling
     
     *kwargs*: keywords arguments that will be pust to *func* at calling
+    
+    *hosts*: list of hosts step should run on. If not provided, *localhost* will be used.
+        if 
     
     *requires*: mapping of step statuses such that when set of events, added step will be launched:
     
@@ -301,26 +302,25 @@ Args
 Returns
 ```````
 
-    If there was a failure that was not followed by event triggered, result will be False.`
+    If there was a failure that was not followed by event triggered, result will be False.
 
-    
+Distributed Operation 
+=====================
 
+*Sequent* can operate Steps on distributed environment. A step can be associated with hosts using *hosts* argument in *add_step*. *Sequent* uses SSH to submit steps to remote host. This menas that cluster needs to be configured with SSH keys. To set up the environment for *Sequent* distributed operation:
 
-Sequent close method
---------------------
+1. Host from which *Sequent* program would be initiated, should be able to SSH to participating hosts without only using keys.
+#. SSH authorized_keys on each target host should has proper *command* to initiate the right operation environment.  This may include activating the correct virtualenv.
+#. Optionally, set SSH backdoor to originated host. In the future *Sequent* may use this backdoor, as callback.
+#. Software needs to be uniformly installed on all participating machines.
+#. *Sequent* must be initiated with database configuration that is accessable from all participating hosts.  *Sequent* and its remote agents would use that database to share  operation information. The database user needs to have permissions to create schema (if the associated schema is not created.) It also needs to have create table permissions.
+#. Anything passed to Sequent, predominately with *add_step*, needs to be importable. For example in simple example:
 
     .. code-block:: python
     
-        close()
+        import example_progs as example
         
-when calling close method, Sequentor closes open artifacts.  In concept, this is similar to Pool's close method. 
-
-In simple example, **myflow.close()** engage Sequent's close() method.
-        
-Args
-````
-
-    N/A. 
+        s111 = s11.add_step('s111', func=example.prog, kwargs={'progname': 'prog1'})
 
 
 Recovery
@@ -341,57 +341,55 @@ Recovery Example
         import sequent as sqnt
         import logging
 
-        logger=logging.getLogger(__name__)
+        logger = logging.getLogger(__name__)
 
         def prog(flow, progname, step_to_fail=None, iteration_to_fail=''):
-            step_name=flow.get_step_name() 
-            step_sequence=flow.get_step_sequence()
-            logger.info("doing what %s is doing (%s/%s)" % (progname, step_name, step_sequence))
+            step_name = flow.get_step_name() 
+            step_sequence = flow.get_step_sequence()
+            logger.info("doing what {} is doing (}/{})".format(progname, step_name, step_sequence))
             if step_to_fail == step_name and step_sequence== iteration_to_fail:
-                raise Exception("%s failed (%s/%s)" % (progname, step_name, step_sequence))
+                raise Exception("{} failed ({}/{})".format(progname, step_name, step_sequence))
             return progname
 
-        def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fail=''):
-            myflow=sqnt.Sequent(logging_level=logging.INFO, run_mode=run_mode, 
-                                config={'sleep_between_loops': 0.05,}, )
+        def build_flow(run_mode = sqnt.RunMode.restart, step_to_fail=None, iteration_to_fail=''):
+            myflow = sqnt.Sequent(logging_level=logging.INFO, run_mode=run_mode, 
+                                  config={'sleep_between_loops': 0.05,}, )
 
-            s1=myflow.add_step('s1', repeats=[1,2])
+            s1 = myflow.add_step('s1', repeats=[1,2])
     
-            s11=s1.add_step('s11', repeats=[1,2,])
+            s11 = s1.add_step('s11', repeats=[1,2,])
     
-            s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1', 
+            s111 = s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1', 
                                                          'step_to_fail':step_to_fail, 
                                                          'iteration_to_fail':iteration_to_fail,}) 
-            s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2', 
+            s112 = s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2', 
                                                          'step_to_fail':step_to_fail, 
                                                          'iteration_to_fail':iteration_to_fail,}, 
-                              requires=( (s111, sqnt.StepStatus.success), )) 
+                              requires=((s111, sqnt.StepStatus.success),)) 
     
-            s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3', 
+            s12 = s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3', 
                                                       'step_to_fail':step_to_fail, 
                                                       'iteration_to_fail':iteration_to_fail,}, 
-                            requires=( (s11, sqnt.StepStatus.success), )) 
+                            requires=((s11, sqnt.StepStatus.success),)) 
     
-            s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4', 
+            s2 = myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4', 
                                                         'step_to_fail':step_to_fail, 
                                                         'iteration_to_fail':iteration_to_fail,}, 
-                               requires=( (s1, sqnt.StepStatus.success), )) 
+                               requires=((s1, sqnt.StepStatus.success),)) 
             return myflow
 
         # creating flow simulating failure
-        myflow=build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
+        myflow = build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
         myflow.run()
-        myflow.close()
 
         # creating recovery flow
-        myflow=build_flow(run_mode=sqnt.RunMode.recover, )
+        myflow = build_flow(run_mode=sqnt.RunMode.recover, )
         myflow.run()
-        myflow.close()
     
 Example Output
 --------------
 
-    .. code:: 
+    .. code-block:: python
         :number-lines:
         
         [ 2016-12-07 14:49:24,437 ][ INFO ][ Eventor store file: /sequent/example/runly04.run.db ]
@@ -449,9 +447,12 @@ Example Highlights
     
     .. code-block:: python
     
-         name=os.getenv('EVENTOR_STEP_NAME')
-         sequence=os.getenv('EVENTOR_STEP_SEQUENCE')
-         recovery=os.getenv('EVENTOR_STEP_RECOVERY')
+         name = os.getenv('EVENTOR_STEP_NAME')
+         sequence = os.getenv('EVENTOR_STEP_SEQUENCE')
+         recovery = os.getenv('EVENTOR_STEP_RECOVERY')
+         
+Distributed Example
+-------------------
 
 Resources
 =========
@@ -468,7 +469,7 @@ Resources
 Example for resources definitions
 ---------------------------------
 
-    .. code:: 
+    .. code-block:: python
         :number-lines:
         
         import sequent as sqnt
@@ -477,11 +478,11 @@ Example for resources definitions
         class Resources1(vrp.Resource): pass
         class Resources2(vrp.Resource): pass
         
-        rp1=vrp.ResourcePool('RP1', resource_cls=Resources1, policy={'resource_limit': 2, }).load()                   
-        rp2=vrp.ResourcePool('RP2', resource_cls=Resources2, policy={'resource_limit': 2, }).load()
+        rp1 = vrp.ResourcePool('RP1', resource_cls=Resources1, policy={'resource_limit': 2, }).load()                   
+        rp2 = vrp.ResourcePool('RP2', resource_cls=Resources2, policy={'resource_limit': 2, }).load()
         
-        myflow=sqnt.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
-        s1=myflow.add_step('s1', repeats=[1,2], acquires=[(rp1, 2), ])
+        myflow = sqnt.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
+        s1 = myflow.add_step('s1', repeats=[1,2], acquires=[(rp1, 2), ])
     
 Additional Information
 ======================

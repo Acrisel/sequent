@@ -35,9 +35,9 @@ if config.startswith('/private'):
     config = config[8:]
 
 
-myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, shared_db=False, store='pgdb2', eventor_config_tag='SEQUENT', )
+myflow = seq.Sequent(logging_level=logging.INFO, config=config, shared_db=False, store='pgdb2', eventor_config_tag='SEQUENT', )
 
-s = myflow.add_step('s0', repeats=[1,2,])
+s = myflow.add_step('s0', repeats=[1,])
 
 s1 = s.add_step('s1', repeats=[1,2,])
 s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}, hosts=['ubuntud01_sequent']) 

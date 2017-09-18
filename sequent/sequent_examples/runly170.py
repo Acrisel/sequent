@@ -43,7 +43,7 @@ s112 = s11.add_step('s112', func=rprogs.prog, kwargs={'progname': 'prog2',},
                   requires=( (s111, seq.StepStatus.success), )) 
 
 s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog3'}, 
-                requires=( (s11, seq.StepStatus.success), ), delay=30, ) 
+                requires=( (s11, seq.StepStatus.success), ), delay=30, hosts=['ubuntud01_sequent']) 
 
 s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog4'}, 
                    requires=( (s1, seq.StepStatus.success), )) 
