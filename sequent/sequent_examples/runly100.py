@@ -28,8 +28,7 @@ from sequent_examples import run_progs as rprogs
 
 logger = logging.getLogger(__name__)
 
-#config = os.path.abspath('example00.conf')
-config=os.path.abspath('example00.conf')
+config=os.path.abspath('runly.conf')
 # because OSX adds /var -> /private/var
 if config.startswith('/private'):
     config = config[8:]

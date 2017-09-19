@@ -35,7 +35,7 @@ def prog(flow, progname, success=True):
         raise Exception("%s failed" % progname)
     return progname
 
-config_file = os.path.abspath('example00.conf')
+config_file = os.path.abspath('runly.conf')
 #conf = os.path.join(os.path.dirname(__file__), config_file)
 myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
 #myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, store='pgdb2', eventor_config_tag='SEQUENT')

@@ -26,9 +26,9 @@ import logging
 import os
 import sequent_examples.run_progs as rprogs
 
-logger=logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-config=os.path.abspath('example00.conf')
+config=os.path.abspath('runly.conf')
 if config.startswith('/private'):
     config = config[8:]
 
