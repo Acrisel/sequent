@@ -32,7 +32,7 @@ config=os.path.abspath('runly.conf')
 if config.startswith('/private'):
     config = config[8:]
 
-myflow = seq.Sequent(logging_level=logging.INFO, config=config, shared_db=False, store='pgdb2', eventor_config_tag='SEQUENT',)
+myflow = seq.Sequent(config=config, store='pgdb2', eventor_config_tag='SEQUENT',)
 
 s1 = myflow.add_step('s1', repeats=range(2) )
 

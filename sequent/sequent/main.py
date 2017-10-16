@@ -34,7 +34,7 @@ module_logger.setLevel(logging.DEBUG)
 
 class Sequent(object):
     
-    def __init__(self, name='', store='', *args, **kwargs):
+    def __init__(self, name='', store='', config={}, *args, **kwargs):
         """initializes step object            
         """
         
@@ -46,6 +46,7 @@ class Sequent(object):
         self.store = store if store else eventor.store_from_module(calling_module)
         self.__remotes = []
         self.name = name if name else os.path.basename(eventor.calling_module())
+        self.config = config
         
     def __repr__(self):
         return Step.__repr__(self.root_step)
@@ -94,7 +95,7 @@ class Sequent(object):
     
     def run(self, max_loops=-1, ):
         
-        self.evr = eventor.Eventor(*self.args, name=self.name, store=self.store, **self.kwargs)
+        self.evr = eventor.Eventor(*self.args, name=self.name, store=self.store, config=self.config, **self.kwargs)
         self.root_step.create_flow(self.evr)
         result = self.evr.run(max_loops=max_loops)
         self.evr.close()

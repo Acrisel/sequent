@@ -128,6 +128,8 @@ Sequent Interface
 Sequent Class Initiator
 -----------------------
 
+    Sequent signature in its most simplistic format:
+    
     .. code-block:: python
         
         Sequent(name='', store='', run_mode=RunMode.restart, recovery_run=None, logging_level=logging.INFO, config={})
