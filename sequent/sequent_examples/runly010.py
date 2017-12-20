@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 import sequent_examples.run_progs as rprogs
 
 config_file = os.path.abspath('runly.conf')
-myflow = seq.Sequent(logging_level=logging.INFO, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
+myflow = seq.Sequent(config=config_file, store='sqfile00', eventor_config_tag='SEQUENT')
     
 s = myflow.add_step('s0', repeats=[1,2,])
 

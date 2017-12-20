@@ -11,9 +11,9 @@ from enum import Enum
 class SequentError(Exception):
     pass
 
-class Start(Enum):
-    resume=1
-    restart=2
+# class Start(Enum):
+#     resume=1
+#     restart=2
     
 class LogocalOp(Enum):
     or_=1
