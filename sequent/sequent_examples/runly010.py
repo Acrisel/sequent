@@ -30,19 +30,19 @@ logger = logging.getLogger(__name__)
 import sequent_examples.run_progs as rprogs
 
 config_file = os.path.abspath('runly.conf')
-myflow = seq.Sequent(config=config_file, store='sqfile00', eventor_config_tag='SEQUENT')
+myflow = seq.Sequent(config=config_file, store='sqfile00', config_tag='SEQUENT')
     
 s = myflow.add_step('s0', repeats=[1,2,])
 
 s1 = s.add_step('s1', repeats=[1,2,])
 s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}) 
-s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.StepStatus.complete ), ))
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.STP_COMPLETE ), ))
 
 s2 = s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
 s21 = s2.add_step('s21', func=rprogs.prog, kwargs={'progname': 'prog21'})
-s22 = s2.add_step('s22', func=rprogs.prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.StepStatus.complete ), ))
+s22 = s2.add_step('s22', func=rprogs.prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.STP_COMPLETE ), ))
 
-e1 = s.add_event( ( (s1, seq.StepStatus.complete), (s2, seq.StepStatus.complete), ) )
+e1 = s.add_event( ( (s1, seq.STP_COMPLETE), (s2, seq.STP_COMPLETE), ) )
 s3 = s.add_step('s3', func=rprogs.prog, kwargs={'progname': 'prog3'}, requires=(e1,))
 
 myflow.run()

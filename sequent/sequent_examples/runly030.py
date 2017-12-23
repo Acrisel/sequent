@@ -38,32 +38,37 @@ def square_root(x):
     y=math.sqrt(x)
     return y
 
+
 def divide(x,y):
     z=x/y
     return z
 
-def build_flow(run_mode=evr.RunMode.restart, param=9):
-    myflow=seq.Sequent(logging_level=logging.DEBUG, run_mode=run_mode, config={'sleep_between_loops': 0.05,})
+
+
+def build_flow(run_mode=evr.RunMode.restart, param=9, run_id=None):
+    myflow=seq.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING':{'logging_level':logging.DEBUG}})
     
     s0 = myflow.add_step('s0', repeats=[1], ) 
     
     s1 = s0.add_step('s1', func=square, kwargs={'x': 3}, ) 
     
-    s2 = s0.add_step('s2', square_root, kwargs={'x': param}, requires=[(s1,seq.StepStatus.success), ],
-                   recovery={evr.TaskStatus.failure: evr.StepReplay.rerun, 
-                             evr.TaskStatus.success: evr.StepReplay.skip})
+    s2 = s0.add_step('s2', square_root, kwargs={'x': param}, requires=[(s1,seq.STP_SUCCESS), ],
+                   recovery={seq.STP_FAILURE: seq.STP_RERUN,
+                             seq.STP_SUCCESS: seq.STP_SKIP})
     
-    s3=s0.add_step('s3', divide, kwargs={'x': 9, 'y': 3}, requires=[(s2, seq.StepStatus.success), ])
+    s3 = s0.add_step('s3', divide, kwargs={'x': 9, 'y': 3}, requires=[(s2, seq.STP_SUCCESS), ])
     
     return myflow
 
 # start regularly; it would fail in step 2
 
-ev=build_flow(param=-9)
+ev = build_flow(param=-9)
 ev.run()
 ev.close()
 
+run_id = ev.run_id
+
 # rerun in recovery
-ev=build_flow(evr.RunMode.recover, param=9)
+ev=build_flow(evr.RunMode.recover, param=9, run_id=run_id)
 ev.run()
 ev.close()

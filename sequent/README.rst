@@ -41,8 +41,8 @@ Simple Example
                 raise Exception("{} failed".format(progname))
             return progname
 
-        myflow = seq.Sequent(logging_level=logging.INFO, 
-                           config={'sleep_between_loops': 0.05,})
+        myflow = seq.Sequent(config={'sleep_between_loops': 0.05, 
+                                     'LOGGING': {'logging_level':logging.DEBUG}})
 
         s1 = myflow.add_step('s1', repeats=[1,2])
 
@@ -50,13 +50,13 @@ Simple Example
 
         s111 = s11.add_step('s111', func=prog, kwargs={'progname': 'prog1'}) 
         s112 = s11.add_step('s112', func=prog, kwargs={'progname': 'prog2'}, 
-                          requires=( (s111, seq.StepStatus.success), )) 
+                          requires=( (s111, seq.STP_SUCCESS), )) 
 
         s12 = s1.add_step('s12', func=prog, kwargs={'progname': 'prog3'}, 
-                        require=s( (s11, seq.StepStatus.success), )) 
+                        require=s( (s11, seq.STP_SUCCESS), )) 
 
         s2 = myflow.add_step('s2', func=prog, kwargs={'progname': 'prog4'}, 
-                           requires=((s1, seq.StepStatus.success),)) 
+                           requires=((s1, seq.STP_SUCCESS),)) 
 
         myflow.run() 
            
@@ -132,7 +132,7 @@ Sequent Class Initiator
     
     .. code-block:: python
         
-        Sequent(name='', store='', run_mode=RunMode.restart, recovery_run=None, logging_level=logging.INFO, config={})
+        Sequent(name='', store='', run_mode=SEQ.RESTART, recovery_run=None, config={}, config_tag='')
 
 Description
 ```````````
@@ -172,13 +172,15 @@ Args
         |                     |                  | limit will be pose                               |
         +---------------------+------------------+--------------------------------------------------+
         | stop_on_exception   | True             | if an exception occurs in a step, stop           |
-        |                     |                  | all processes.  If True, new processes will not  |
-        |                     |                  | start.  But running processes will be permitted  |
+        |                     |                  | all processes. If True, new processes will not   |
+        |                     |                  | start. But running processes will be permitted   |
         |                     |                  | to finish                                        |
         +---------------------+------------------+--------------------------------------------------+
         | sleep_between_loops | 1                | seconds to sleep between iteration of checking   |
         |                     |                  | triggers and tasks                               |
         +---------------------+------------------+--------------------------------------------------+
+        
+    config_tag: key with in config where Sequent configuration starts.
           
 Sequent add_event method
 ------------------------
@@ -190,7 +192,7 @@ Sequent add_event method
 Args
 ````
 
-    *requires*: logical expression 'sqlalchemy' style to automatically raise this expresion.
+    *requires*: logical expression 'sqlalchemy' style to automatically raise this expression.
         syntax: 
         
         .. code-block:: python
@@ -231,21 +233,21 @@ Args
     
     *requires*: mapping of step statuses such that when set of events, added step will be launched:
     
-        +--------------------+-------------------------------------------+
-        | status             | description                               |
-        +====================+===========================================+
-        | StepState.ready    | set when task is ready to run (triggered) |
-        +--------------------+-------------------------------------------+
-        | StepState.active   | set when task is running                  |
-        +--------------------+-------------------------------------------+
-        | StepState.success  | set when task is successful               |
-        +--------------------+-------------------------------------------+
-        | StepState.failure  | set when task fails                       |
-        +--------------------+-------------------------------------------+
-        | StepState.complete | stands for success or failure of task     |
-        +--------------------+-------------------------------------------+
+        +--------------+-------------------------------------------+
+        | status       | description                               |
+        +==============+===========================================+
+        | STP_READY    | set when task is ready to run (triggered) |
+        +--------------+-------------------------------------------+
+        | STP_ACTIVE   | set when task is running                  |
+        +--------------+-------------------------------------------+
+        | STP_SUCCESS  | set when task is successful               |
+        +--------------+-------------------------------------------+
+        | STP_FAILURE  | set when task fails                       |
+        +--------------+-------------------------------------------+
+        | STP_COMPLETE | stands for success or failure of task     |
+        +--------------+-------------------------------------------+
         
-    *delay*: seconds to wait before executing step once ts requires are available.  Actual execution 
+    *delay*: seconds to wait before executing step once is requires are available.  Actual execution 
         may be delayed further if resources needs to be acquired.
     
     *acquires*: list of tuples of resource pool and amount of resources to acquire before starting. 
@@ -256,25 +258,25 @@ Args
             
     *recovery*: mapping of state status to how step should be handled in recovery:
     
-        +-----------------------+------------------+------------------------------------------------------+
-        | status                | default          | description                                          |
-        +=======================+==================+======================================================+
-        | StatusStatus.ready    | StepReplay.rerun | if in recovery and previous status is ready, rerun   |
-        +-----------------------+------------------+------------------------------------------------------+
-        | StatusStatus.active   | StepReplay.rerun | if in recovery and previous status is active, rerun  |
-        +-----------------------+------------------+------------------------------------------------------+
-        | StatusStatus.failure  | StepReplay.rerun | if in recovery and previous status is failure, rerun |
-        +-----------------------+------------------+------------------------------------------------------+
-        | StatusStatus.success  | StepReplay.skip  | if in recovery and previous status is success, skip  |
-        +-----------------------+------------------+------------------------------------------------------+
+        +--------------+-----------+------------------------------------------------------+
+        | status       | default   | description                                          |
+        +==============+===========+======================================================+
+        | STP_READY    | STP_RERUN | if in recovery and previous status is ready, rerun   |
+        +--------------+-----------+------------------------------------------------------+
+        | STP_ACTIVE   | STP_RERUN | if in recovery and previous status is active, rerun  |
+        +--------------+-----------+------------------------------------------------------+
+        | STP_FAILURE  | STP_RERUN | if in recovery and previous status is failure, rerun |
+        +--------------+-----------+------------------------------------------------------+
+        | STP_SUCCESS  | STP_SKIP  | if in recovery and previous status is success, skip  |
+        +--------------+-----------+------------------------------------------------------+
     
     *config*: keywords mapping overrides for step configuration.
     
-        +-------------------+------------------+---------------------------------------+
-        | name              | default          | description                           |
-        +===================+==================+=======================================+
-        | stop_on_exception | True             | stop flow if step ends with Exception | 
-        +-------------------+------------------+---------------------------------------+
+        +-------------------+---------------+---------------------------------------+
+        | name              | default       | description                           |
+        +===================+===============+=======================================+
+        | stop_on_exception | True          | stop flow if step ends with Exception | 
+        +-------------------+---------------+---------------------------------------+
     
 Returns
 ```````
@@ -353,9 +355,8 @@ Recovery Example
                 raise Exception("{} failed ({}/{})".format(progname, step_name, step_sequence))
             return progname
 
-        def build_flow(run_mode = sqnt.RunMode.restart, step_to_fail=None, iteration_to_fail=''):
-            myflow = sqnt.Sequent(logging_level=logging.INFO, run_mode=run_mode, 
-                                  config={'sleep_between_loops': 0.05,}, )
+        def build_flow(run_mode = sqnt.SEQ_RESTART, run_id=None, step_to_fail=None, iteration_to_fail=''):
+            myflow = sqnt.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05,}, )
 
             s1 = myflow.add_step('s1', repeats=[1,2])
     
@@ -367,25 +368,27 @@ Recovery Example
             s112 = s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2', 
                                                          'step_to_fail':step_to_fail, 
                                                          'iteration_to_fail':iteration_to_fail,}, 
-                              requires=((s111, sqnt.StepStatus.success),)) 
+                              requires=((s111, sqnt.STP_SUCEESS),)) 
     
             s12 = s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3', 
                                                       'step_to_fail':step_to_fail, 
                                                       'iteration_to_fail':iteration_to_fail,}, 
-                            requires=((s11, sqnt.StepStatus.success),)) 
+                            requires=((s11, sqnt.STP_SUCEESS),)) 
     
             s2 = myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4', 
                                                         'step_to_fail':step_to_fail, 
                                                         'iteration_to_fail':iteration_to_fail,}, 
-                               requires=((s1, sqnt.StepStatus.success),)) 
+                               requires=((s1, sqnt.STP_SUCEESS),)) 
             return myflow
 
         # creating flow simulating failure
         myflow = build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
         myflow.run()
+        
+        run_id = myflow.run_id
 
         # creating recovery flow
-        myflow = build_flow(run_mode=sqnt.RunMode.recover, )
+        myflow = build_flow(run_mode=SEQ_RECOVER, run_id = run_id)
         myflow.run()
     
 Example Output
@@ -440,18 +443,20 @@ Example Highlights
     
     The function *build_flow* (code line 14) build a Sequent flow similarly to simple example above.  Since no specific store is provided in Sequent instantiation, a default runner store is assigned (code line 15). In this build, steps will use default recovery directives whereby successful steps are skipped.  
     
-    The first build and run is done in lines 42-43.  In this run, a parameter is passed to cause step *s111* in its fourth iteration to fail.  As a result, flow fails.  Output lines 1-29 is associated with the first run.  
+    The first build and run is done in lines 42-43. In this run, a parameter is passed to cause step *s111* in its fourth iteration to fail.  As a result, flow fails.  Output lines 1-29 is associated with the first run.  
     
-    The second build and run is then initiated.  In this run, parameter is set to a value that would pass step *s111* and run mode is set to recovery (code lines 45-46). Eventor skips successful steps and start executing from failed steps onwards.  Output lines 30-40 reflects successful second run.
+    The second build and run is then initiated.  In this run, parameter is set to a value that would pass step *s111* and run mode is set to recovery (code lines 45-46). Eventor skips successful steps and start executing from failed steps onwards. Output lines 30-40 reflects successful second run.
+    
+    Note that the second run required a **run_id** of the run that is reactivated. *run_id* is fetched from its correspounding attribute in *Sequent* Objects.
     
     For prog to know when to default, it uses the following methods flow.get_step_name() and flow.get_step_sequence() (lines 7-8). Those Sequent methods allow access to Eventor step attributes. Another way
     to access these attributes is via os.environ:
     
     .. code-block:: python
     
-         name = os.getenv('EVENTOR_STEP_NAME')
-         sequence = os.getenv('EVENTOR_STEP_SEQUENCE')
-         recovery = os.getenv('EVENTOR_STEP_RECOVERY')
+         name = os.getenv('SEQUENT_STEP_NAME')
+         sequence = os.getenv('SEQUENT_STEP_SEQUENCE')
+         recovery = os.getenv('SEQUENT_STEP_RECOVERY')
          
 Distributed Example
 -------------------
@@ -483,7 +488,7 @@ Example for resources definitions
         rp1 = vrp.ResourcePool('RP1', resource_cls=Resources1, policy={'resource_limit': 2, }).load()                   
         rp2 = vrp.ResourcePool('RP2', resource_cls=Resources2, policy={'resource_limit': 2, }).load()
         
-        myflow = sqnt.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
+        myflow = sqnt.Sequent(config={'sleep_between_loops': 0.05,}, )
         s1 = myflow.add_step('s1', repeats=[1,2], acquires=[(rp1, 2), ])
     
 Additional Information

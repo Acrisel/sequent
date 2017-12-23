@@ -30,7 +30,7 @@ logger=logging.getLogger(__name__)
 
 config_file = os.path.abspath('runly.conf')
 #conf = os.path.join(os.path.dirname(__file__), config_file)
-myflow = seq.Sequent(logging_level=logging.DEBUG, config=config_file, shared_db=False, store='sqfile00', eventor_config_tag='SEQUENT')
+myflow = seq.Sequent(config=config_file, store='sqfile00', config_tag='SEQUENT', )
 #myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, store='pgdb2', eventor_config_tag='SEQUENT')
 
 s1 = myflow.add_step('s1', repeats=[1,] )

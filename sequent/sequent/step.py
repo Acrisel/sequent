@@ -81,9 +81,9 @@ class Container(object):
         if initial:
             self.iter = Mediator(self.repeat())
             todos = 1
-            #self.triggers = self.step.create_flow(eventor, trigger=False,)
-            self.initiating_sequence = eventor_task_sequence #self.ev.get_task_sequence()
+            self.initiating_sequence = eventor_task_sequence 
             self.loop_index = 0
+            
             # eventor_task_sequence is parent sequence, take as is
             sequence = eventor_task_sequence
             logger.debug("[ Step {} ] Setting sequence: {}.".format(self.progname, sequence, ))
@@ -91,7 +91,6 @@ class Container(object):
             # this is child sequence - convert to parent
             sequence = str(eventor_task_sequence)
             parts = sequence.rpartition('.')
-            #sequence=parts[0]
             sequence = parts[0] if parts[0] else parts[2]
             if sequence:
                 todos, _ = eventor.count_todos_like("{}.%".format(sequence)) 
@@ -154,7 +153,7 @@ class Step(object):
         
     """
     
-    config_defaults=eventor.Eventor.config_defaults
+    config_defaults = eventor.Eventor.config_defaults
 
     def __init__(self, parent=None, name=None, func=None, args=[], kwargs={}, config={}, requires=(), delay=0, acquires=[], releases=None, recovery={}, repeats=[1,], hosts=None, import_module=None, import_file=None):
         

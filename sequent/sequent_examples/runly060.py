@@ -26,7 +26,7 @@ from acris import virtual_resource_pool as rp
 
 logger=logging.getLogger(__name__)
 
-def prog(flow, progname, success=True):
+def prog(progname, success=True):
     logger.info("doing what %s is doing" % progname)
     
     if not success:
@@ -36,21 +36,21 @@ def prog(flow, progname, success=True):
 class StepResource(rp.Resource): pass
 rp1=rp.ResourcePool('RP1', resource_cls=StepResource, policy={'resource_limit': 2, }).load()                   
 
-myflow=seq.Sequent(logging_level=logging.INFO, config={'sleep_between_loops': 0.05,}, )
+myflow=seq.Sequent(config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
 
 s1=myflow.add_step('s1', repeats=range(2) )
 
 s11=s1.add_step('s11', repeats=[1,2,])
 
-s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1'}, acquires=[(rp1, 1), ]) 
-s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2',}, acquires=[(rp1, 1), ], 
-                  requires=( (s111, seq.StepStatus.success), )) 
+s111=s11.add_step('s111', func=prog, kwargs={'progname': 'prog1'}, acquires=[(rp1, 1), ]) 
+s112=s11.add_step('s112', func=prog, kwargs={'progname': 'prog2',}, acquires=[(rp1, 1), ], 
+                  requires=( (s111, seq.STP_SUCCESS), )) 
 
-s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3'}, 
-                requires=( (s11, seq.StepStatus.success), )) 
+s12=s1.add_step('s12', func=prog, kwargs={'progname': 'prog3'}, 
+                requires=( (s11, seq.STP_SUCCESS), )) 
 
-s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4'}, 
-                   requires=( (s1, seq.StepStatus.success), )) 
+s2=myflow.add_step('s2', func=prog, kwargs={'progname': 'prog4'}, 
+                   requires=( (s1, seq.STP_SUCCESS), )) 
 
 myflow.run()
 myflow.close()

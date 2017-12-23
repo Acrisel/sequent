@@ -34,7 +34,7 @@ if config.startswith('/private'):
     config = config[8:]
 
 
-myflow = seq.Sequent(logging_level=logging.INFO, config=config, shared_db=False, store='pgdb2', eventor_config_tag='SEQUENT', )
+myflow = seq.Sequent(config=config, store='pgdb2', config_tag='SEQUENT', )
 
 s = myflow.add_step('s0', repeats=[1,])
 

@@ -23,13 +23,14 @@
 
 import sequent as sqnt
 import logging
+import os
 from acris import virtual_resource_pool as vrp
 
 logger=logging.getLogger(__name__)
 
-def prog(flow, progname, step_to_fail=None, iteration_to_fail=''):
-    step_name=flow.get_step_name() 
-    step_sequence=flow.get_step_sequence()
+def prog(progname, step_to_fail=None, iteration_to_fail=''):
+    step_name = os.environ["SEQUENT_STEP_NAME"]
+    step_sequence = os.environ["SEQUENT_STEP_SEQUENCE"]
     logger.info("doing what %s is doing (%s/%s)" % (progname, step_name, step_sequence))
     if step_to_fail == step_name and step_sequence== iteration_to_fail:
         raise Exception("%s failed (%s/%s)" % (progname, step_name, step_sequence))
@@ -38,42 +39,43 @@ def prog(flow, progname, step_to_fail=None, iteration_to_fail=''):
 class Resources1(vrp.Resource): pass
 class Resources2(vrp.Resource): pass
 
-def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fail=''):
-    myflow=sqnt.Sequent(logging_level=logging.DEBUG, run_mode=run_mode, config={'sleep_between_loops': 0.05,}, )
+def build_flow(run_mode=sqnt.RunMode.restart, step_to_fail=None, iteration_to_fail='', run_id=None):
+    myflow = sqnt.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
     
-    rp1=vrp.ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 4, })
-    rp2=vrp.ResourcePool('rp2', resource_cls=Resources2, policy={'resource_limit': 4, })
+    rp1 = vrp.ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 4, })
+    rp2 = vrp.ResourcePool('rp2', resource_cls=Resources2, policy={'resource_limit': 4, })
 
-    s1=myflow.add_step('s1', repeats=[1,2], acquires=[(rp1, 2), ])
+    s1 = myflow.add_step('s1', repeats=[1,2], acquires=[(rp1, 2), ])
     
-    s11=s1.add_step('s11', repeats=[1,2,], acquires=[(rp2, 2), ])
+    s11 = s1.add_step('s11', repeats=[1,2,], acquires=[(rp2, 2), ])
     
-    s111=s11.add_step('s111', func=prog, kwargs={'flow': myflow, 'progname': 'prog1', 
+    s111 = s11.add_step('s111', func=prog, kwargs={'progname': 'prog1', 
+                                                 'step_to_fail': step_to_fail, 
+                                                 'iteration_to_fail': iteration_to_fail,}) 
+    s112 = s11.add_step('s112', func=prog, kwargs={'progname': 'prog2', 
                                                  'step_to_fail':step_to_fail, 
-                                                 'iteration_to_fail':iteration_to_fail,}) 
-    s112=s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2', 
-                                                 'step_to_fail':step_to_fail, 
-                                                 'iteration_to_fail':iteration_to_fail,}, 
-                      requires=( (s111, sqnt.StepStatus.success), )) 
+                                                 'iteration_to_fail': iteration_to_fail,}, 
+                      requires=( (s111, sqnt.STP_SUCCESS), )) 
     
-    s12=s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3', 
-                                              'step_to_fail':step_to_fail, 
-                                              'iteration_to_fail':iteration_to_fail,}, 
-                    requires=( (s11, sqnt.StepStatus.success), )) 
+    s12 = s1.add_step('s12', func=prog, kwargs={'progname': 'prog3', 
+                                              'step_to_fail': step_to_fail, 
+                                              'iteration_to_fail': iteration_to_fail,}, 
+                    requires=( (s11, sqnt.STP_SUCCESS), )) 
     
-    s2=myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4', 
-                                                'step_to_fail':step_to_fail, 
-                                                'iteration_to_fail':iteration_to_fail,}, 
-                       requires=( (s1, sqnt.StepStatus.success), )) 
+    s2 = myflow.add_step('s2', func=prog, kwargs={'progname': 'prog4', 
+                                                'step_to_fail': step_to_fail, 
+                                                'iteration_to_fail': iteration_to_fail,}, 
+                       requires=( (s1, sqnt.STP_SUCCESS), )) 
     return myflow
 
-#myflow=build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
-#result=myflow()
-#print('run result: %s' % repr(result))
+myflow = build_flow(step_to_fail='s1_s11_s111', iteration_to_fail='1.2.2')
+result = myflow.run()
+print('run result: %s' % repr(result))
 
+run_id = myflow.run_id
 
-myflow=build_flow(run_mode=sqnt.RunMode.recover, )
-#myflow=build_flow()
-result=myflow.run()
+myflow = build_flow(run_mode=sqnt.RunMode.recover, run_id=run_id)
+#myflow = build_flow()
+result = myflow.run()
 myflow.close()
 print('run result: %s' % repr(result))

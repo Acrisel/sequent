@@ -32,7 +32,7 @@ config=os.path.abspath('runly.conf')
 if config.startswith('/private'):
     config = config[8:]
 
-myflow = seq.Sequent(logging_level=logging.INFO, config=config, shared_db=False, store='pgdb2', eventor_config_tag='SEQUENT',)
+myflow = seq.Sequent(config=config, store='pgdb2', config_tag='SEQUENT',)
 
 s1 = myflow.add_step('s1', repeats=range(2) )
 
@@ -40,13 +40,13 @@ s11 = s1.add_step('s11', repeats=[1,2,])
 
 s111 = s11.add_step('s111', func=rprogs.prog, kwargs={'progname': 'prog1'}) 
 s112 = s11.add_step('s112', func=rprogs.prog, kwargs={'progname': 'prog2',}, 
-                  requires=( (s111, seq.StepStatus.success), )) 
+                  requires=( (s111, seq.STP_SUCCESS), )) 
 
 s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog3'}, 
-                requires=( (s11, seq.StepStatus.success), ), delay=30, ) 
+                requires=( (s11, seq.STP_SUCCESS), ), delay=30, ) 
 
 s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog4'}, 
-                   requires=( (s1, seq.StepStatus.success), )) 
+                   requires=( (s1, seq.STP_SUCCESS), )) 
 
 myflow.run()
 myflow.close()
