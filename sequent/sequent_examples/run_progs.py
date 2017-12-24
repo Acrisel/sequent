@@ -8,6 +8,41 @@ import logging
 logger = logging.getLogger(__name__)
 import time
 
+class Step(object):
+    '''
+    Basic building block for sequent steps with precistency
+    '''
+
+    def __init__(self,):
+        pass
+    
+    def __call__(self, *args, **kwargs):
+        try:
+            self.at_start(*args, **kwargs)
+        except Exception:
+            raise
+        
+        try:
+            _status = self.main(*args, **kwargs)
+        except Exception:
+            raise
+        
+        try:
+            self.at_end(*args, _status=_status, **kwargs)
+        except Exception:
+            raise
+        
+    def at_start(self, *args, **kwargs):
+        pass
+        
+    def main(self, *args, **kwargs):
+        pass
+        
+    def at_end(self, _status, *args, **kwargs):
+        pass
+    
+
+
 def prog(progname, success=True,):
     
     logger.info("doing what %s is doing" % progname)
