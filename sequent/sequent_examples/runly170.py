@@ -40,13 +40,13 @@ s11 = s1.add_step('s11', repeats=[1,2,])
 
 s111 = s11.add_step('s111', func=rprogs.prog, kwargs={'progname': 'prog1'}) 
 s112 = s11.add_step('s112', func=rprogs.prog, kwargs={'progname': 'prog2',}, 
-                  requires=( (s111, seq.StepStatus.success), )) 
+                  requires=( (s111, seq.STEP_SUCCESS), )) 
 
 s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog3'}, 
-                requires=( (s11, seq.StepStatus.success), ), delay=10, hosts=['ubuntud01_sequent']) 
+                requires=( (s11, seq.STEP_SUCCESS), ), delay=10, hosts=['ubuntud01_sequent']) 
 
 s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog4'}, 
-                   requires=( (s1, seq.StepStatus.success), )) 
+                   requires=( (s1, seq.STEP_SUCCESS), )) 
 
 myflow.run()
 myflow.close()

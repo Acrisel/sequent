@@ -44,13 +44,13 @@ s11 = s1.add_step('s11', repeats=[1,])
 
 s111 = s1.add_step('s111', func=Prog(), kwargs={'progname': 'prog1'}, repeats=[1,]) 
 s112 = s1.add_step('s112', func=Prog(), kwargs={'progname': 'prog2',}, 
-                  requires=( (s111, seq.StepStatus.success), )) 
+                  requires=( (s111, seq.STEP_SUCCESS), )) 
 
 s12 = s1.add_step('s12', func=Prog(), kwargs={'progname': 'prog3'}, 
-                requires=( (s11, seq.StepStatus.success), )) 
+                requires=( (s11, seq.STEP_SUCCESS), )) 
 
 s2 = myflow.add_step('s2', func=Prog(), kwargs={'progname': 'prog4'}, 
-                   requires=( (s1, seq.StepStatus.success), )) 
+                   requires=( (s1, seq.STEP_SUCCESS), )) 
 
 if __name__ == '__main__':
     import multiprocessing as mp

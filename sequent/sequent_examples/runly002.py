@@ -40,7 +40,7 @@ s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11', 'succes
 s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12',}, repeats=[1,]) 
 
 s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog2'}, 
-                   requires=( (s1, seq.STP_SUCCESS), )) 
+                   requires=( (s1, seq.STEP_SUCCESS), )) 
 
 if __name__ == '__main__':
     import multiprocessing as mp

@@ -3,15 +3,17 @@ from .main import Sequent
 from .sequent_types import SequentError, RunMode, StepReplay, StepStatus
 from .utils import or_
 
-STP_ACTIVE = StepStatus.active
-STP_SUCCESS = StepStatus.success
-STP_FAILURE = StepStatus.failure
-STP_COMPLETE = StepStatus.complete
+STEP_READY = StepStatus.ready  # step is ready
+STEP_ACTIVE = StepStatus.active  # step is active
+STEP_SUCCESS = StepStatus.success  # step succeeded
+STEP_FAILURE = StepStatus.failure  # step failed
+STEP_COMPLETE = StepStatus.complete  # step complete with success or failure
 
-STP_SKIP = StepReplay.skip
-STP_RERUN = StepReplay.rerun
+STEP_SKIP = StepReplay.skip  # skip step if previously succeeded
+STEP_RERUN = StepReplay.rerun  # reruns step regardless if previously succeeded
 
-SEQ_RESTART = RunMode.restart
-SEQ_RECOVER = RunMode.recover
-SEQ_REPLAY = RunMode.replay
-SEQ_CONTINUE = RunMode.continue_
+RUN_RESTART = RunMode.restart  # run flow from start
+RUN_RECOVER = RunMode.recover  # reruns failed steps
+
+# Note: internal use only
+RUN_CONTINUE = RunMode.continue_  # continue from where it left in previous loop

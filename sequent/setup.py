@@ -3,6 +3,7 @@ import sys
 
 from setuptools import setup
 from distutils.sysconfig import get_python_lib
+import importlib.util
 
 ''' 
 is the Python package in your project. It's the top-level folder containing the 
@@ -22,39 +23,40 @@ To create package and upload:
   twine upload -s dist/path/to/gz
 
 '''
+
+
+def import_setup_utils():
+    # load setup utils
+    try:
+        setup_utils_spec = \
+            importlib.util.spec_from_file_location("setup.utils",
+                                                   "setup_utils.py")
+        setup_utils = importlib.util.module_from_spec(setup_utils_spec)
+        setup_utils_spec.loader.exec_module(setup_utils)
+    except Exception as err:
+        raise RuntimeError("Failed to find setup_utils.py."
+                           " Please copy or link.") from err
+    return setup_utils
+
+
+setup_utils = import_setup_utils()
+HERE = os.path.abspath(os.path.dirname(__file__))
 PACKAGE = "sequent"
-
-'''
-NAME is usually similar to or the same as your PACKAGE name but can be whatever you want. 
-The NAME is what people will refer to your software as, the name under which your 
-software is listed in PyPI and—more importantly—under which users will install it 
-(for example, pip install NAME).
-'''
 NAME = PACKAGE
+# METAPATH = os.path.join(HERE, PACKAGE, "__init__.py")
+metahost = setup_utils.metahost(PACKAGE)
 
-'''
-DESCRIPTION is just a short description of your project. A sentence will suffice.
-'''
 DESCRIPTION = '''sequent is a programming interface based on eventor providing simple way to write program flows'''
-
-'''
-AUTHOR and AUTHOR_EMAIL are what they sound like: your name and email address. This 
-information is optional, but it's good practice to supply an email address if people 
-want to reach you about the project.
-'''
 AUTHOR = 'Acrisel Team'
 AUTHOR_EMAIL = 'support@acrisel.com'
-
-'''
-URL is the URL for the project. This URL may be a project website, the Github repository, 
-or whatever URL you want. Again, this information is optional.
-'''
 URL = 'https://github.com/Acrisel/sequent'
-version_file=os.path.join(PACKAGE, 'VERSION.py')
-with open(version_file, 'r') as vf:
-    vline=vf.read()
-VERSION = vline.strip().partition('=')[2].replace("'", "")
-#VERSION =__import__(version_file).__version__
+
+# version_file=os.path.join(PACKAGE, 'VERSION.py')
+# with open(version_file, 'r') as vf:
+#     vline=vf.read()
+# VERSION = vline.strip().partition('=')[2].replace("'", "")
+metafile = setup_utils.metafile(PACKAGE, 'VERSION')
+VERSION = setup_utils.read_version(metahost=metahost, metafile=metafile)
 
 # Warn if we are installing over top of an existing installation. This can
 # cause issues where files that were deleted from a more recent Accord are

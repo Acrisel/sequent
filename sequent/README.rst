@@ -50,13 +50,13 @@ Simple Example
 
         s111 = s11.add_step('s111', func=prog, kwargs={'progname': 'prog1'}) 
         s112 = s11.add_step('s112', func=prog, kwargs={'progname': 'prog2'}, 
-                          requires=( (s111, seq.STP_SUCCESS), )) 
+                          requires=( (s111, seq.STEP_SUCCESS), )) 
 
         s12 = s1.add_step('s12', func=prog, kwargs={'progname': 'prog3'}, 
-                        require=s( (s11, seq.STP_SUCCESS), )) 
+                        require=s( (s11, seq.STEP_SUCCESS), )) 
 
         s2 = myflow.add_step('s2', func=prog, kwargs={'progname': 'prog4'}, 
-                           requires=((s1, seq.STP_SUCCESS),)) 
+                           requires=((s1, seq.STEP_SUCCESS),)) 
 
         myflow.run() 
            
@@ -132,7 +132,7 @@ Sequent Class Initiator
     
     .. code-block:: python
         
-        Sequent(name='', store='', run_mode=SEQ.RESTART, recovery_run=None, config={}, config_tag='')
+        Sequent(name='', store='', run_mode=SEQ.SEQUENT_RESTART, recovery_run=None, config={}, config_tag='')
 
 Description
 ```````````
@@ -148,12 +148,12 @@ Args
     
     store: path to file that would store runnable (sqlite) information; if ':memory:' is used, in-memory temporary 
         storage will be created.  If not provided, calling module path and name will be used 
-        with db extension instead of py
+        with db extension instead of 'py'.
     
-    run_mode: can be either *RunMode.restart* (default) or *RunMode.recover*; in restart, new instance or the run 
+    run_mode: can be either *RUN_RESTART* (default) or *RUN_RECOVER*; in restart, new instance or the run 
         will be created. In recovery, 
               
-    recovery_run: if *RunMode.recover* is used, *recovery_run* will indicate specific instance of previously recovery 
+    recovery_run: if *RUN_RECOVER* is used, *recovery_run* will indicate specific instance of previously recovery 
         run that would be executed.If not provided, latest run would be used.
           
     config: keyword dictionary of default configurations. Available keywords and their default values:
@@ -226,26 +226,26 @@ Args
     
     *args*: tuple of values that will be passed to *func* at calling
     
-    *kwargs*: keywords arguments that will be pust to *func* at calling
+    *kwargs*: keywords arguments that will be passed to *func* at calling
     
     *hosts*: list of hosts step should run on. If not provided, *localhost* will be used.
         if 
     
     *requires*: mapping of step statuses such that when set of events, added step will be launched:
     
-        +--------------+-------------------------------------------+
-        | status       | description                               |
-        +==============+===========================================+
-        | STP_READY    | set when task is ready to run (triggered) |
-        +--------------+-------------------------------------------+
-        | STP_ACTIVE   | set when task is running                  |
-        +--------------+-------------------------------------------+
-        | STP_SUCCESS  | set when task is successful               |
-        +--------------+-------------------------------------------+
-        | STP_FAILURE  | set when task fails                       |
-        +--------------+-------------------------------------------+
-        | STP_COMPLETE | stands for success or failure of task     |
-        +--------------+-------------------------------------------+
+        +---------------+-------------------------------------------+
+        | status        | description                               |
+        +===============+===========================================+
+        | STEP_READY    | set when task is ready to run (triggered) |
+        +---------------+-------------------------------------------+
+        | STEP_ACTIVE   | set when task is running                  |
+        +---------------+-------------------------------------------+
+        | STEP_SUCCESS  | set when task is successful               |
+        +---------------+-------------------------------------------+
+        | STEP_FAILURE  | set when task fails                       |
+        +---------------+-------------------------------------------+
+        | STEP_COMPLETE | stands for success or failure of task     |
+        +---------------+-------------------------------------------+
         
     *delay*: seconds to wait before executing step once is requires are available.  Actual execution 
         may be delayed further if resources needs to be acquired.
@@ -261,13 +261,13 @@ Args
         +--------------+-----------+------------------------------------------------------+
         | status       | default   | description                                          |
         +==============+===========+======================================================+
-        | STP_READY    | STP_RERUN | if in recovery and previous status is ready, rerun   |
+        | STEP_READY   | STP_RERUN | if in recovery and previous status is ready, rerun   |
         +--------------+-----------+------------------------------------------------------+
-        | STP_ACTIVE   | STP_RERUN | if in recovery and previous status is active, rerun  |
+        | STEP_ACTIVE  | STP_RERUN | if in recovery and previous status is active, rerun  |
         +--------------+-----------+------------------------------------------------------+
-        | STP_FAILURE  | STP_RERUN | if in recovery and previous status is failure, rerun |
+        | STEP_FAILURE | STP_RERUN | if in recovery and previous status is failure, rerun |
         +--------------+-----------+------------------------------------------------------+
-        | STP_SUCCESS  | STP_SKIP  | if in recovery and previous status is success, skip  |
+        | STEP_SUCCESS | STP_SKIP  | if in recovery and previous status is success, skip  |
         +--------------+-----------+------------------------------------------------------+
     
     *config*: keywords mapping overrides for step configuration.
@@ -311,13 +311,13 @@ Returns
 Distributed Operation 
 =====================
 
-*Sequent* can operate Steps on distributed environment. A step can be associated with hosts using *hosts* argument in *add_step*. *Sequent* uses SSH to submit steps to remote host. This menas that cluster needs to be configured with SSH keys. To set up the environment for *Sequent* distributed operation:
+*Sequent* can operate Steps on distributed environment. A step can be associated with hosts using *hosts* argument in *add_step*. *Sequent* uses SSH to submit steps to remote host. This means that cluster needs to be configured with SSH keys. To set up the environment for *Sequent* distributed operation:
 
 1. Host from which *Sequent* program would be initiated, should be able to SSH to participating hosts without only using keys.
 #. SSH authorized_keys on each target host should has proper *command* to initiate the right operation environment.  This may include activating the correct virtualenv.
 #. Optionally, set SSH backdoor to originated host. In the future *Sequent* may use this backdoor, as callback.
 #. Software needs to be uniformly installed on all participating machines.
-#. *Sequent* must be initiated with database configuration that is accessable from all participating hosts.  *Sequent* and its remote agents would use that database to share  operation information. The database user needs to have permissions to create schema (if the associated schema is not created.) It also needs to have create table permissions.
+#. *Sequent* must be initiated with database configuration that is accessible from all participating hosts.  *Sequent* and its remote agents would use that database to share  operation information. The database user needs to have permissions to create schema (if the associated schema is not created.) It also needs to have create table permissions.
 #. Anything passed to Sequent, predominately with *add_step*, needs to be importable. For example in simple example:
 
     .. code-block:: python
@@ -355,7 +355,7 @@ Recovery Example
                 raise Exception("{} failed ({}/{})".format(progname, step_name, step_sequence))
             return progname
 
-        def build_flow(run_mode = sqnt.SEQ_RESTART, run_id=None, step_to_fail=None, iteration_to_fail=''):
+        def build_flow(run_mode = sqnt.RUN_RESTART, run_id=None, step_to_fail=None, iteration_to_fail=''):
             myflow = sqnt.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05,}, )
 
             s1 = myflow.add_step('s1', repeats=[1,2])
@@ -368,17 +368,17 @@ Recovery Example
             s112 = s11.add_step('s112', func=prog, kwargs={'flow': myflow, 'progname': 'prog2', 
                                                          'step_to_fail':step_to_fail, 
                                                          'iteration_to_fail':iteration_to_fail,}, 
-                              requires=((s111, sqnt.STP_SUCEESS),)) 
+                              requires=((s111, sqnt.STEP_SUCEESS),)) 
     
             s12 = s1.add_step('s12', func=prog, kwargs={'flow': myflow, 'progname': 'prog3', 
                                                       'step_to_fail':step_to_fail, 
                                                       'iteration_to_fail':iteration_to_fail,}, 
-                            requires=((s11, sqnt.STP_SUCEESS),)) 
+                            requires=((s11, sqnt.STEP_SUCEESS),)) 
     
             s2 = myflow.add_step('s2', func=prog, kwargs={'flow': myflow, 'progname': 'prog4', 
                                                         'step_to_fail':step_to_fail, 
                                                         'iteration_to_fail':iteration_to_fail,}, 
-                               requires=((s1, sqnt.STP_SUCEESS),)) 
+                               requires=((s1, sqnt.STEP_SUCEESS),)) 
             return myflow
 
         # creating flow simulating failure
@@ -388,7 +388,7 @@ Recovery Example
         run_id = myflow.run_id
 
         # creating recovery flow
-        myflow = build_flow(run_mode=SEQ_RECOVER, run_id = run_id)
+        myflow = build_flow(run_mode=RUN_RECOVER, run_id=run_id)
         myflow.run()
     
 Example Output
@@ -447,7 +447,7 @@ Example Highlights
     
     The second build and run is then initiated.  In this run, parameter is set to a value that would pass step *s111* and run mode is set to recovery (code lines 45-46). Eventor skips successful steps and start executing from failed steps onwards. Output lines 30-40 reflects successful second run.
     
-    Note that the second run required a **run_id** of the run that is reactivated. *run_id* is fetched from its correspounding attribute in *Sequent* Objects.
+    Note that the second run required a **run_id** of the run that is reactivated. *run_id* is fetched from its corresponding attribute in *Sequent* Objects.
     
     For prog to know when to default, it uses the following methods flow.get_step_name() and flow.get_step_sequence() (lines 7-8). Those Sequent methods allow access to Eventor step attributes. Another way
     to access these attributes is via os.environ:
