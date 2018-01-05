@@ -25,12 +25,13 @@ import sequent as seq
 import logging
 import os
 
-logger = logging.getLogger(__name__)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
 
 import sequent_examples.run_progs as rprogs
 
 config_file = os.path.abspath('runly.conf')
-myflow = seq.Sequent(config=config_file, store='sqfile00', config_tag='SEQUENT')
+myflow = seq.Sequent(name=appname, config=config_file, store='sqfile00', config_tag='SEQUENT')
     
 s = myflow.add_step('s0', repeats=[1,2,])
 

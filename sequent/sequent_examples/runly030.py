@@ -24,10 +24,10 @@
 import sequent as seq
 import logging
 import math
+import os
 
-logger=logging.getLogger(__name__)
-
-logger.setLevel(logging.DEBUG)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
 
 def square(x):
     y=x*x
@@ -45,7 +45,7 @@ def divide(x,y):
 
 
 def build_flow(run_mode=seq.RUN_RESTART, param=9, run_id=None):
-    myflow=seq.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING':{'logging_level':logging.DEBUG}})
+    myflow = seq.Sequent(name=appname, run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING':{'logging_level':logging.DEBUG}})
     
     s0 = myflow.add_step('s0', repeats=[1], ) 
     

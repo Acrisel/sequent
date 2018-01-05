@@ -31,18 +31,17 @@ class Prog(Step):
     def main(self, *args, **kwargs):
         return rprogs.prog(*args, **kwargs)
 
-logger=logging.getLogger(__name__)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
 
 config_file = os.path.abspath('runly.conf')
-myflow = seq.Sequent()
-# myflow = seq.Sequent(config=config_file, store='sqfile00', config_tag='SEQUENT', )
-# myflow = seq.Sequent(logging_level=logging.DEBUG, config=config, store='pgdb2', eventor_config_tag='SEQUENT')
+myflow = seq.Sequent(name=appname)
 
 s1 = myflow.add_step('s1', repeats=[1,] )
 
 s11 = s1.add_step('s11', repeats=[1,])
 
-s111 = s1.add_step('s111', func=Prog(), kwargs={'progname': 'prog1'}, repeats=[1,]) 
+s111 = s1.add_step('s111', func=Prog(), kwargs={'progname': 'prog1'}, repeats=[1, ]) 
 s112 = s1.add_step('s112', func=Prog(), kwargs={'progname': 'prog2',}, 
                   requires=( (s111, seq.STEP_SUCCESS), )) 
 

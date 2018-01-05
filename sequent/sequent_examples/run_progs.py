@@ -5,8 +5,9 @@ Created on Sep 12, 2017
 '''
 
 import logging
-logger = logging.getLogger(__name__)
 import time
+import os
+
 
 class Step(object):
     '''
@@ -44,10 +45,10 @@ class Step(object):
 
 
 def prog(progname, success=True,):
-    
-    logger.info("doing what %s is doing" % progname)
+    logger = logging.getLogger(os.getenv("SEQUENT_LOGGER_NAME"))
+    logger.info("doing what %s is doing." % progname)
     time.sleep(1)
     if not success:
-        raise Exception("%s failed" % progname)
+        raise Exception("%s failed." % progname)
     return progname
 

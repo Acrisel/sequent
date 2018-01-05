@@ -26,9 +26,12 @@ import logging
 import os
 from acris import virtual_resource_pool as vrp
 
-logger=logging.getLogger(__name__)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
+
 
 def prog(progname, step_to_fail=None, iteration_to_fail=''):
+    logger = logging.getLogger(os.getenv("SEQUENT_LOGGER_NAME"))
     step_name = os.environ["SEQUENT_STEP_NAME"]
     step_sequence = os.environ["SEQUENT_STEP_SEQUENCE"]
     logger.info("doing what %s is doing (%s/%s)" % (progname, step_name, step_sequence))
@@ -36,11 +39,17 @@ def prog(progname, step_to_fail=None, iteration_to_fail=''):
         raise Exception("%s failed (%s/%s)" % (progname, step_name, step_sequence))
     return progname
 
-class Resources1(vrp.Resource): pass
-class Resources2(vrp.Resource): pass
+
+class Resources1(vrp.Resource):
+    pass
+
+
+class Resources2(vrp.Resource):
+    pass
+
 
 def build_flow(run_mode=sqnt.RUN_RESTART, step_to_fail=None, iteration_to_fail='', run_id=None):
-    myflow = sqnt.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
+    myflow = sqnt.Sequent(name=appname, run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
     
     rp1 = vrp.ResourcePool('rp1', resource_cls=Resources1, policy={'resource_limit': 4, })
     rp2 = vrp.ResourcePool('rp2', resource_cls=Resources2, policy={'resource_limit': 4, })
@@ -74,7 +83,7 @@ print('run result: %s' % repr(result))
 
 run_id = myflow.run_id
 
-myflow = build_flow(run_mode=sqnt.RUN_RECOVERr, run_id=run_id)
+myflow = build_flow(run_mode=sqnt.RUN_RECOVER, run_id=run_id)
 #myflow = build_flow()
 result = myflow.run()
 myflow.close()

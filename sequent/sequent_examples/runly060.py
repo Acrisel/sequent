@@ -23,10 +23,15 @@
 import sequent as seq
 import logging
 from acris import virtual_resource_pool as rp
+import os
 
-logger=logging.getLogger(__name__)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
+
+
 
 def prog(progname, success=True):
+    logger = logging.getLogger(os.getenv("SEQUENT_LOGGER_NAME"))
     logger.info("doing what %s is doing" % progname)
     
     if not success:
@@ -36,7 +41,7 @@ def prog(progname, success=True):
 class StepResource(rp.Resource): pass
 rp1=rp.ResourcePool('RP1', resource_cls=StepResource, policy={'resource_limit': 2, }).load()                   
 
-myflow=seq.Sequent(config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
+myflow=seq.Sequent(name=appname, config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
 
 s1=myflow.add_step('s1', repeats=range(2) )
 

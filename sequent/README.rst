@@ -33,9 +33,8 @@ Simple Example
         import sequent as seq
         import logging
 
-        logger=logging.getLogger(__name__)
-
         def prog(progname, success=True):
+            logger = logging.getLogger(os.getenv("SEQUENT_LOGGER_NAME"))
             logger.info("doing what {} is doing".format(progname))
             if not success:
                 raise Exception("{} failed".format(progname))
@@ -121,6 +120,8 @@ Code Highlights
     *s11* contains two processing steps *s111* and *s112* (lines 19-20).  
     
     Finally, on line 29 the flow is executed using *myflow()*.
+    
+    *logger* is set with in step program (line 5) to direct step logging into its dedicated log.
  
 Sequent Interface
 =================
@@ -345,9 +346,11 @@ Recovery Example
         import sequent as sqnt
         import logging
 
-        logger = logging.getLogger(__name__)
+        appname = os.path.basename(__file__)
+        logger = logging.getLogger(appname)
 
         def prog(flow, progname, step_to_fail=None, iteration_to_fail=''):
+            logger = logging.getLogger(os.getenv("SEQUENT_LOGGER_NAME"))
             step_name = flow.get_step_name() 
             step_sequence = flow.get_step_sequence()
             logger.info("doing what {} is doing (}/{})".format(progname, step_name, step_sequence))
@@ -356,7 +359,7 @@ Recovery Example
             return progname
 
         def build_flow(run_mode = sqnt.RUN_RESTART, run_id=None, step_to_fail=None, iteration_to_fail=''):
-            myflow = sqnt.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05,}, )
+            myflow = sqnt.Sequent(name=appname, run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05,}, )
 
             s1 = myflow.add_step('s1', repeats=[1,2])
     
@@ -457,6 +460,7 @@ Example Highlights
          name = os.getenv('SEQUENT_STEP_NAME')
          sequence = os.getenv('SEQUENT_STEP_SEQUENCE')
          recovery = os.getenv('SEQUENT_STEP_RECOVERY')
+         logger_name = os.getenv('SEQUENT_LOGGER_NAME')
          
 Distributed Example
 -------------------

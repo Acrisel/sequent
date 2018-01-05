@@ -26,7 +26,8 @@ import logging
 import os
 from sequent_examples import run_progs as rprogs
 
-logger = logging.getLogger(__name__)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
 
 config=os.path.abspath('runly.conf')
 # because OSX adds /var -> /private/var
@@ -34,7 +35,7 @@ if config.startswith('/private'):
     config = config[8:]
 
 
-myflow = seq.Sequent(config=config, store='pgdb2', config_tag='SEQUENT', )
+myflow = seq.Sequent(name=appname, config=config, store='pgdb2', config_tag='SEQUENT', )
 
 s = myflow.add_step('s0', repeats=[1,])
 

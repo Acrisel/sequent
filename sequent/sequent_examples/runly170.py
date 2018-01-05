@@ -26,13 +26,14 @@ import logging
 import os
 import sequent_examples.run_progs as rprogs
 
-logger = logging.getLogger(__name__)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
 
 config = os.path.abspath('runly.conf')
 if config.startswith('/private'):
     config = config[8:]
 
-myflow = seq.Sequent(config=config, store='pgdb2', config_tag='SEQUENT',)
+myflow = seq.Sequent(name=appname, config=config, store='pgdb2', config_tag='SEQUENT',)
 
 s1 = myflow.add_step('s1', repeats=range(2) )
 

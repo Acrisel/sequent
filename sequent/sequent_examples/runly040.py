@@ -25,9 +25,12 @@ import sequent as sqnt
 import logging
 import os
 
-logger=logging.getLogger(__name__)
+appname = os.path.basename(__file__)
+logger = logging.getLogger(appname)
+
 
 def prog(progname, step_to_fail=None, iteration_to_fail=''):
+    logger = logging.getLogger(os.getenv("SEQUENT_LOGGER_NAME"))
     step_name = os.environ["SEQUENT_STEP_NAME"]
     step_sequence = os.environ["SEQUENT_STEP_SEQUENCE"]
     logger.info("doing what %s is doing (%s/%s)" % (progname, step_name, step_sequence))
@@ -36,7 +39,7 @@ def prog(progname, step_to_fail=None, iteration_to_fail=''):
     return progname
 
 def build_flow(run_mode=sqnt.RUN_RESTART, step_to_fail=None, iteration_to_fail='', run_id=None):
-    myflow = sqnt.Sequent(run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
+    myflow = sqnt.Sequent(name=appname, run_mode=run_mode, run_id=run_id, config={'sleep_between_loops': 0.05, 'LOGGING': {'logging_level': logging.INFO, }}, )
     
 
     s1 = myflow.add_step('s1', repeats=[1,2], )
