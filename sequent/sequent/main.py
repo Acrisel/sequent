@@ -24,7 +24,6 @@ import eventor
 import logging 
 import os
 import eventor as evr
-
 from sequent.step import Step
 #from .sequent_types import RunMode
 
@@ -45,7 +44,7 @@ class Sequent(object):
     def __init__(self, name='', store='', config={}, config_tag='', *args, **kwargs):
         """initializes step object            
         """
-        self.config = evr.conf_handler.merge_configs(config, Sequent.config_defaults, config_tag, envvar_config_tag='SEQUENT_CONFIG_TAG', )
+        self.config = evr.merge_configs(config, Sequent.config_defaults, config_tag, envvar_config_tag='SEQUENT_CONFIG_TAG', )
         self.args = args
         self.kwargs = kwargs
         #self.host = host if host else get_hostname()

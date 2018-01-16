@@ -51,10 +51,6 @@ AUTHOR = 'Acrisel Team'
 AUTHOR_EMAIL = 'support@acrisel.com'
 URL = 'https://github.com/Acrisel/sequent'
 
-# version_file=os.path.join(PACKAGE, 'VERSION.py')
-# with open(version_file, 'r') as vf:
-#     vline=vf.read()
-# VERSION = vline.strip().partition('=')[2].replace("'", "")
 metafile = setup_utils.metafile(PACKAGE, 'VERSION')
 VERSION = setup_utils.read_version(metahost=metahost, metafile=metafile)
 

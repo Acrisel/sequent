@@ -29,17 +29,12 @@ from sequent_examples import run_progs as rprogs
 appname = os.path.basename(__file__)
 logger = logging.getLogger(appname)
 
-config = os.path.abspath('runly.conf')
-# because OSX adds /var -> /private/var
-if config.startswith('/private'):
-    config = config[8:]
+config_file = os.path.abspath('runly.conf')
+myflow = seq.Sequent(name=appname, config=config_file, config_tag='SEQUENT', store='pgdb2')
 
+s = myflow.add_step('s0', repeats=[1, 2,])
 
-myflow = seq.Sequent(name=appname, config=config, shared_db=False, config_tag='SEQUENT', )
-
-s = myflow.add_step('s0', repeats=[1,2,])
-
-s1 = s.add_step('s1', repeats=[1,2,])
+s1 = s.add_step('s1', repeats=[1, 2,])
 s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}, hosts=['ubuntud01_sequent']) 
 s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, )
 

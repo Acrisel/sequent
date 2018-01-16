@@ -25,8 +25,6 @@ import logging
 import os
 import sequent_examples.run_progs as rprogs
 
-# appname = os.path.basename(__file__)
-# logger = logging.getLogger(appname)
 
 config_file = os.path.abspath('runly.conf')
 myflow = seq.Sequent(config=config_file, store='sqfile00', config_tag='SEQUENT', )

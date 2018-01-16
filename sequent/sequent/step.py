@@ -8,7 +8,7 @@ import os
 from acris import MergedChainedDict, Sequence, Mediator
 from sequent.sequent_types import SequentError, LogocalOp
 from sequent.event import Event
-from eventor.eventor_types import StepStatus, StepReplay #, Invoke
+from eventor import StepStatus, StepReplay #, Invoke
 #from eventor.utils import decorate_all, print_method
 import eventor
 from collections.abc import Sequence as AbcSequence
