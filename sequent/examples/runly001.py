@@ -23,7 +23,7 @@
 import sequent as seq
 import logging
 import os
-import sequent_examples.run_progs as rprogs
+import examples.run_progs as rprogs
 
 
 config_file = os.path.abspath('runly.conf')

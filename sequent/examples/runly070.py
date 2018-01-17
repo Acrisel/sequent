@@ -24,12 +24,12 @@
 import sequent as seq
 import logging
 import os
-import sequent_examples.run_progs as rprogs
+import examples.run_progs as rprogs
 
 appname = os.path.basename(__file__)
 logger = logging.getLogger(appname)
 
-config = os.path.abspath('runly.conf')
+config=os.path.abspath('runly.conf')
 if config.startswith('/private'):
     config = config[8:]
 
@@ -44,7 +44,7 @@ s112 = s11.add_step('s112', func=rprogs.prog, kwargs={'progname': 'prog2',},
                   requires=( (s111, seq.STEP_SUCCESS), )) 
 
 s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog3'}, 
-                requires=( (s11, seq.STEP_SUCCESS), ), delay=10, hosts=['ubuntud01_sequent']) 
+                requires=( (s11, seq.STEP_SUCCESS), ), delay=30, ) 
 
 s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog4'}, 
                    requires=( (s1, seq.STEP_SUCCESS), )) 

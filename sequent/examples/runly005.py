@@ -24,8 +24,8 @@ import sequent as seq
 import logging
 import time
 import os
-import sequent_examples.run_progs as rprogs
-from sequent_examples.run_progs import Step
+import examples.run_progs as rprogs
+from examples.run_progs import Step
 
 class Prog(Step):
     def main(self, *args, **kwargs):
