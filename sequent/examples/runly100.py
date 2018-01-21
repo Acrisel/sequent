@@ -52,8 +52,8 @@ s3 = s.add_step('s3', func=rprogs.prog, kwargs={'progname': 'prog3'}, requires=(
 
 
 if __name__ == '__main__':
-    import multiprocessing as mp
-    mp.freeze_support()
-    mp.set_start_method('spawn')
+    # import multiprocessing as mp
+    # mp.freeze_support()
+    # mp.set_start_method('spawn')
     myflow.run()
     #myflow.close()
