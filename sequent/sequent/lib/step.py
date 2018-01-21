@@ -6,8 +6,8 @@ Created on Oct 19, 2016
 import logging
 import os
 from acris import MergedChainedDict, Sequence, Mediator
-from sequent.sequent_types import SequentError, LogocalOp
-from sequent.event import Event
+from .sequent_types import SequentError, LogocalOp
+from .event import Event
 from eventor import StepStatus, StepReplay #, Invoke
 #from eventor.utils import decorate_all, print_method
 import eventor

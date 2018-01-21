@@ -1,4 +1,3 @@
-
 # -*- encoding: utf-8 -*-
 ##############################################################################
 #
@@ -24,30 +23,30 @@
 import sequent as seq
 import logging
 import os
-import examples.run_progs as rprogs
+import sequent.examples.run_progs as rprogs
 
-appname = os.path.basename(__file__)
-logger = logging.getLogger(appname)
 
-config = os.path.abspath('runly.conf')
-if config.startswith('/private'):
-    config = config[8:]
+config_file = os.path.abspath('runly.conf')
+myflow = seq.Sequent(config=config_file, store='sqfile00', config_tag='SEQUENT', )
 
-myflow = seq.Sequent(name=appname, config=config, store='pgdb2', config_tag='SEQUENT',)
+s1 = myflow.add_step('s1', repeats=[1, ] )
 
-s1 = myflow.add_step('s1', repeats=range(2) )
+s11 = s1.add_step('s11', repeats=[1, ])
 
-s11 = s1.add_step('s11', repeats=[1,2,])
+kwargs111 = {'progname': 'prog111'}
+kwargs112 = {'progname': 'prog112'}
+kwargs12 = {'progname': 'prog12'}
+kwargs2 = {'progname': 'prog2'}
 
-s111 = s11.add_step('s111', func=rprogs.prog, kwargs={'progname': 'prog1'}) 
-s112 = s11.add_step('s112', func=rprogs.prog, kwargs={'progname': 'prog2',}, 
+s111 = s1.add_step('s111', func=rprogs.prog, kwargs=kwargs111, repeats=[1, ]) 
+s112 = s1.add_step('s112', func=rprogs.prog, kwargs=kwargs112, 
                   requires=( (s111, seq.STEP_SUCCESS), )) 
 
-s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog3'}, 
-                requires=( (s11, seq.STEP_SUCCESS), ), delay=10, hosts=['ubuntud01_sequent']) 
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs=kwargs12, 
+                requires=( (s11, seq.STEP_SUCCESS), )) 
 
-s2 = myflow.add_step('s2', func=rprogs.prog, kwargs={'progname': 'prog4'}, 
+s2 = myflow.add_step('s2', func=rprogs.prog, kwargs=kwargs2, 
                    requires=( (s1, seq.STEP_SUCCESS), )) 
 
-myflow.run()
-myflow.close()
+if __name__ == '__main__':
+    myflow.run()

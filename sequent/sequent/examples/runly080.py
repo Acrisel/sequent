@@ -24,7 +24,7 @@
 import sequent as sqnt
 import logging
 import os
-from examples.run_progs import Step
+from sequent.examples.run_progs import Step
 
 appname = os.path.basename(__file__)
 logger = logging.getLogger(appname)

@@ -1,8 +1,8 @@
-__version__ = '3.1.4'
+__version__ = '3.1.5'
 
-from .main import Sequent
-from .sequent_types import SequentError, RunMode, StepReplay, StepStatus
-from .utils import or_
+from .lib.main import Sequent
+from .lib.sequent_types import SequentError, RunMode, StepReplay, StepStatus
+from .lib.utils import or_
 
 STEP_READY = StepStatus.ready  # step is ready
 STEP_ACTIVE = StepStatus.active  # step is active

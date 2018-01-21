@@ -24,7 +24,7 @@ import eventor
 import logging 
 import os
 import eventor as evr
-from sequent.step import Step
+from .step import Step
 #from .sequent_types import RunMode
 
 module_logger = logging.getLogger(__name__)
