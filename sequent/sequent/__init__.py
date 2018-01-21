@@ -1,4 +1,5 @@
-from .VERSION import __version__
+__version__ = '3.1.3'
+
 from .main import Sequent
 from .sequent_types import SequentError, RunMode, StepReplay, StepStatus
 from .utils import or_
