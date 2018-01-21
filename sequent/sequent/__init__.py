@@ -1,4 +1,4 @@
-__version__ = '3.1.3'
+__version__ = '3.1.4'
 
 from .main import Sequent
 from .sequent_types import SequentError, RunMode, StepReplay, StepStatus
