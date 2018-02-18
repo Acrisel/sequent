@@ -601,6 +601,7 @@ class Step(object):
                 # at this point, hosts is a single host     
                 evr_step = evr.add_step(step.get_step_name(), func=step.func, args=step.args, kwargs=step.kwargs, 
                                       acquires=step.acquires, releases=step.releases, triggers=triggers, config=step.config, 
+                                      recovery=step.recovery,
                                       import_module=step.import_module, import_file=step.import_file, host=step.hosts[0])
                 steps[step.path] = evr_step
                 start_event = self.__eventor_events[step.get_start_event_name()]

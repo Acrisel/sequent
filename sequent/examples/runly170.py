@@ -24,7 +24,7 @@
 import sequent as seq
 import logging
 import os
-import sequent.examples.run_progs as rprogs
+import examples.run_progs as rprogs
 
 appname = os.path.basename(__file__)
 logger = logging.getLogger(appname)

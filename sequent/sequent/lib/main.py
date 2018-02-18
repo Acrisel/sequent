@@ -41,11 +41,11 @@ class Sequent(object):
             }
         }
     
-    def __init__(self, name='', store='', config={}, config_tag='', *args, **kwargs):
+    def __init__(self, name='', store='', config={}, config_tag='', **kwargs):
         """initializes step object            
         """
         self.config = evr.merge_configs(config, Sequent.config_defaults, config_tag, envvar_config_tag='SEQUENT_CONFIG_TAG', )
-        self.args = args
+        # self.args = args
         self.kwargs = kwargs
         #self.host = host if host else get_hostname()
         self.root_step = Step(name='', app_config=self.config)  # name,)
@@ -60,7 +60,7 @@ class Sequent(object):
     def __repr__(self):
         return Step.__repr__(self.root_step)
     
-    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=(), delay=0, acquires=[], releases=None, config={}, recovery=None, repeats=[1, ], hosts=None, import_module=None, import_file=None):
+    def add_step(self, name=None, func=None, args=[], kwargs={}, requires=(), delay=0, acquires=[], releases=None, config={}, recovery={}, repeats=[1, ], hosts=None, import_module=None, import_file=None):
         """add a step to steps object
         
         Args:
@@ -102,9 +102,12 @@ class Sequent(object):
         if self.evr:
             return self.evr.get_step_name()
     
-    def run(self, max_loops=-1, ):
+    def run(self, max_loops=-1, **kwargs):
         # There is no need to pass config_tag=self.config_tag, since it was already stripped off.
-        self.evr = evr = eventor.Eventor(*self.args, name=self.name, store=self.store, config=self.config, **self.kwargs)
+        
+        self.kwargs.update(kwargs)
+        
+        self.evr = evr = eventor.Eventor(name=self.name, store=self.store, config=self.config, **self.kwargs)
         self.run_id = evr.run_id
         self.root_step.create_flow(evr)
         result = evr.run(max_loops=max_loops)

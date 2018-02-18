@@ -24,31 +24,36 @@
 import sequent as seq
 import logging
 import os
-import sequent.examples.run_progs as rprogs
+import examples.run_progs as rprogs
 
 appname = os.path.basename(__file__)
 logger = logging.getLogger(appname)
 
-config_file = os.path.abspath('runly.conf')
-myflow = seq.Sequent(name=appname, config=config_file, config_tag='SEQUENT', store='pgdb2')
+config=os.path.abspath('runly.conf')
+# because OSX adds /var -> /private/var
+if config.startswith('/private'):
+    config = config[8:]
 
-s = myflow.add_step('s0', repeats=[1, 2,])
 
-s1 = s.add_step('s1', repeats=[1, 2,])
+myflow = seq.Sequent(name=appname, config=config, store='pgdb2', config_tag='SEQUENT', )
+
+s = myflow.add_step('s0', repeats=[1])
+
+s1 = s.add_step('s1', repeats=[1, 2])
 s11 = s1.add_step('s11', func=rprogs.prog, kwargs={'progname': 'prog11'}, hosts=['ubuntud01_sequent']) 
-s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, )
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs={'progname': 'prog12'}, requires=( ( s11, seq.STEP_COMPLETE ), ))
 
-s2 = s.add_step('s2', requires=( (s1, seq.StepStatus.complete), ),)
+s2 = s.add_step('s2', requires=( (s1, seq.STEP_COMPLETE), ),)
 s21 = s2.add_step('s21', func=rprogs.prog, kwargs={'progname': 'prog21'})
-s22 = s2.add_step('s22', func=rprogs.prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.STEP_COMPLETE ), ), hosts=['ubuntud01_sequent'])
+s22 = s2.add_step('s22', func=rprogs.prog, kwargs={'progname': 'prog21'}, requires=( ( s21, seq.STEP_COMPLETE ), ))
 
 e1 = s.add_event( ( (s1, seq.STEP_COMPLETE), (s2, seq.STEP_COMPLETE), ) )
 s3 = s.add_step('s3', func=rprogs.prog, kwargs={'progname': 'prog3'}, requires=(e1,))
 
 
 if __name__ == '__main__':
-    import multiprocessing as mp
-    mp.freeze_support()
-    mp.set_start_method('spawn')
+    # import multiprocessing as mp
+    # mp.freeze_support()
+    # mp.set_start_method('spawn')
     myflow.run()
     #myflow.close()

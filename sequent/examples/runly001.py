@@ -22,38 +22,31 @@
 
 import sequent as seq
 import logging
-import time
 import os
-import sequent.examples.run_progs as rprogs
-from .run_progs import Step
+import examples.run_progs as rprogs
 
-class Prog(Step):
-    def main(self, *args, **kwargs):
-        return rprogs.prog(*args, **kwargs)
-
-appname = os.path.basename(__file__)
-logger = logging.getLogger(appname)
 
 config_file = os.path.abspath('runly.conf')
-myflow = seq.Sequent(name=appname)
+myflow = seq.Sequent(config=config_file, store='sqfile00', config_tag='SEQUENT', )
 
-s1 = myflow.add_step('s1', repeats=[1,] )
+s1 = myflow.add_step('s1', repeats=[1, ] )
 
-s11 = s1.add_step('s11', repeats=[1,])
+s11 = s1.add_step('s11', repeats=[1, ])
 
-s111 = s1.add_step('s111', func=Prog(), kwargs={'progname': 'prog1'}, repeats=[1, ]) 
-s112 = s1.add_step('s112', func=Prog(), kwargs={'progname': 'prog2',}, 
+kwargs111 = {'progname': 'prog111'}
+kwargs112 = {'progname': 'prog112'}
+kwargs12 = {'progname': 'prog12'}
+kwargs2 = {'progname': 'prog2'}
+
+s111 = s1.add_step('s111', func=rprogs.prog, kwargs=kwargs111, repeats=[1, ]) 
+s112 = s1.add_step('s112', func=rprogs.prog, kwargs=kwargs112, 
                   requires=( (s111, seq.STEP_SUCCESS), )) 
 
-s12 = s1.add_step('s12', func=Prog(), kwargs={'progname': 'prog3'}, 
+s12 = s1.add_step('s12', func=rprogs.prog, kwargs=kwargs12, 
                 requires=( (s11, seq.STEP_SUCCESS), )) 
 
-s2 = myflow.add_step('s2', func=Prog(), kwargs={'progname': 'prog4'}, 
+s2 = myflow.add_step('s2', func=rprogs.prog, kwargs=kwargs2, 
                    requires=( (s1, seq.STEP_SUCCESS), )) 
 
 if __name__ == '__main__':
-    import multiprocessing as mp
-    mp.freeze_support()
-    mp.set_start_method('spawn')
     myflow.run()
-    #myflow.close()
